@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flask Map App</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>My Flask Map App</h1>
+    </header>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+    <form id="map-form">
+        <input type="hidden" id="lat" name="lat" value="">
+        <input type="hidden" id="lng" name="lng" value="">
+    </form>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAi9JAC2vavwdRimnBvD1sxqCWfSxu8EtY&callback=initMap" async defer></script>
+    <script>
+        var map;
+
+        function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15
+        });
+
+        // Try to get the user's location using the browser's geolocation API
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                map.setCenter(userLocation); // Center the map on the user's location
+            }, function() {
+                // Handle geolocation error (e.g., user denied location access)
+                console.error('Error: The Geolocation service failed.');
+            });
+        } else {
+            // Browser doesn't support geolocation
+            console.error('Error: Your browser doesn\'t support geolocation.');
+        }
+
+        // Add an event listener for map center change
+        google.maps.event.addListener(map, 'center_changed', function() {
+            var newCenter = map.getCenter();
+
+
+            console.log(newCenter);
+
+            document.getElementById('lat').value = newCenter.lat();
+            document.getElementById('lng').value = newCenter.lng();
+
+            // Submit the form using AJAX
+            var formData = new FormData(document.getElementById('map-form'));
+            fetch('/update_map', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        });
+    }
+    </script>
+</body>
+</html>
