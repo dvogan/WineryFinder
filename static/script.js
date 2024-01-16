@@ -6,10 +6,23 @@ var defaultLocation; // Will be set to the user's location
 function initMap() {
    map = new google.maps.Map(document.getElementById('map'), {
        center: defaultLocation, // Default location (initially undefined)
-       zoom: 10, // Adjust the initial zoom level
+       zoom: 10, // Adjust the initial zoom level,
+       mapTypeControl: true, // Enable map type control
+        mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.DEFAULT, // Use default style for map type control
+            mapTypeIds: [google.maps.MapTypeId.ROADMAP], // Only allow the roadmap type
+        },
    });
 
    wineryService = new google.maps.places.PlacesService(map);
+
+   dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
+        "paging": true, // Enable paging
+        "searching": true, // Enable searching
+        "ordering": true, // Enable sorting
+        "info": true // Show table information
+    });
+    dataTable.clear().draw();
 
    console.log(navigator.geolocation)
 
@@ -32,7 +45,7 @@ function initMap() {
            searchForWineries(defaultLocation); // Perform initial search
        });
    } else {
-    console.log("geolocation not available");
+        console.log("geolocation not available");
        // Geolocation is not available, use the default location
        defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
        map.setCenter(defaultLocation); // Set the map center to the default location
@@ -44,9 +57,24 @@ function initMap() {
        logCoordinates();
        searchForWineries();
    });
+
+   map.addListener('zoom_changed', function () {
+        // Handle zoom change here
+        var zoomLevel = map.getZoom();
+        console.log('Zoom Level:', zoomLevel);
+
+        logCoordinates();
+        searchForWineries();
+
+        if (zoomLevel < 10) {
+            
+        } else {
+            // Example: If zoom level is greater than or equal to 10, do something else
+        }
+    });
 }
 
-// Rest of the code remains the same as in the previous response
+    
 
 
 function logCoordinates() {
@@ -55,6 +83,8 @@ function logCoordinates() {
 }
 
 function searchForWineries() {
+    dataTable.clear().draw();
+
    // Clear existing winery markers
    wineryMarkers.forEach(function (marker) {
        marker.setMap(null);
@@ -70,8 +100,10 @@ function searchForWineries() {
    // Perform a Places API search
    wineryService.nearbySearch(request, function (results, status) {
        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            console.log(results);
            results.forEach(function (place) {
                createWineryMarker(place);
+               addToDataTable(place);
            });
        }
        else {
@@ -98,4 +130,38 @@ function createWineryMarker(place) {
    });
 
    wineryMarkers.push(marker);
+}
+
+function addToDataTable(place) {
+    placeID = place.place_id;
+
+    fetchPlaceWebsite(placeID, function (website) {
+        var link;
+
+        if(website=="N/A") {
+            link=''
+        }
+        else {
+            link="<a href='" + website + "' target='_blank'>" + website + "<a/>"
+
+        }
+        dataTable.row.add([place.name, link]).draw();
+    });
+}
+
+function fetchPlaceWebsite(placeId, callback) {
+    fetch(`/get-place-website?place_id=${placeId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.website) {
+                callback(data.website); // Call the callback with the website URL
+            } else {
+                console.error('Error:', data.error);
+                callback('N/A'); // Handle the case where there is no website URL
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            callback('N/A'); // Handle errors and return 'N/A'
+        });
 }

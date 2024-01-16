@@ -13,10 +13,32 @@ body {
     padding: 20px;
 }
 
-#winery-table {
+#wineryTable {
     width: 100%;
 }
 
-#winery-table th {
+#wwineryTableth {
     background-color: #f2f2f2;
+}
+
+/* Add this to style.css */
+
+/* Add this to style.css */
+#banner {
+    background-color: #3498db;
+    color: #ffffff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+}
+
+#icon {
+    max-width: 40px; /* Set a maximum width for the icon */
+    height: auto; /* Allow the height to adjust automatically */
+    margin-right: 10px;
+}
+
+h1 {
+    font-size: 24px;
+    margin: 0;
 }

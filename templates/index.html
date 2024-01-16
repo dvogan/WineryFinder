@@ -3,12 +3,21 @@
 <head>
     <title>Wineries Map</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+
 </head>
 <body>
+    <div id="banner">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Icon" id="icon">
+        <h1>Winery Finder</h1>
+    </div>
     <div id="map"></div>
     <div id="results">
         <h2>Wineries</h2>
-        <table id="winery-table">
+        <table id="wineryTable">
             <thead>
                 <tr>
                     <th>Name</th>
