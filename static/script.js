@@ -11,6 +11,8 @@ function initMap() {
 
    wineryService = new google.maps.places.PlacesService(map);
 
+   console.log(navigator.geolocation)
+
    // Check if geolocation is available in the user's browser
    if (navigator.geolocation) {
        // Get the user's current location
@@ -23,14 +25,14 @@ function initMap() {
            map.setCenter(defaultLocation); // Set the map center to the user's location
            searchForWineries(defaultLocation); // Perform initial search
        }, function () {
-            console.log("geolocation issue");
+            console.log("geolocation failed");
            // Handle errors if geolocation fails
            defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
            map.setCenter(defaultLocation); // Set the map center to the default location
            searchForWineries(defaultLocation); // Perform initial search
        });
    } else {
-    console.log("geolocation issue");
+    console.log("geolocation not available");
        // Geolocation is not available, use the default location
        defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
        map.setCenter(defaultLocation); // Set the map center to the default location
