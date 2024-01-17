@@ -25,11 +25,15 @@ body {
 
 /* Add this to style.css */
 #banner {
-    background-color: #3498db;
+    background-color: #494277;
     color: #ffffff;
     padding: 10px;
     display: flex;
     align-items: center;
+}
+
+#banner_title {
+    font-size:xx-large;
 }
 
 /* Base styles for the icon */

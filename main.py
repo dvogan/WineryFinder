@@ -13,7 +13,6 @@ import psycopg2
 #need to remove this!
 print(os.environ.get('WINE_DATABASE_URL'))
 conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
-cursor = conn.cursor()
 
 testUser="1"
 
@@ -73,6 +72,7 @@ def handle_checkbox_state():
         sql=f"delete from userwineries where placeid='{place_id}' and userid='{testUser}'"
         
     print(sql)
+    cursor = conn.cursor()
     cursor.execute(sql)
     conn.commit()
 
@@ -86,6 +86,7 @@ def get_user_wineries():
 
     print(sql)
 
+    cursor = conn.cursor()
     cursor.execute(sql)
 
     # Loop through the cursor results and build the list of dictionaries
