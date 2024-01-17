@@ -3,6 +3,7 @@ var wineryService;
 var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
 let userwineries;
+var websites=[];
 
 function getUserWineries() {
     fetch('/getUserWineries', {
@@ -50,9 +51,8 @@ function initMap() {
         "info": true, // Show table information
         columnDefs: [
             { targets: [0], width: '10%' }, 
-            { targets: [1], width: '30%' }, 
-            { targets: [2], width: '30%' }, 
-            { targets: [3], width: '30%' }, 
+            { targets: [1], width: '45%' }, 
+            { targets: [2], width: '45%' }, 
         ]
     });
     dataTable.clear().draw();
@@ -140,9 +140,11 @@ function searchForWineries() {
                createWineryMarker(place);
                processPlace(place);
            });
+
+           console.log(websites.length + " sites cached");
        }
        else {
-        crossOriginIsolated.log("!!!!!")
+            crossOriginIsolated.log("!!!!!")
        }
    });
 }
@@ -168,20 +170,46 @@ function createWineryMarker(place) {
 }
 
 function processPlace(place) {
-    placeID = place.place_id;
+    //console.log(place.place_id);
 
-    fetchPlaceWebsite(placeID, function (website) {
+    let websiteObj = websites.find(obj => obj.place_id === place.place_id);
+
+    if(!websiteObj) {
+        console.log(place.place_id + " not found, fetching");
+
+        fetchPlaceWebsite(place.place_id, function (website) {
+            newObj={"place_id":place.place_id,"website":website}
+            websites.push(newObj)
+            //console.log(newObj)
+
+            var link='';
+
+            if(website =="N/A") {
+                link=''
+            }
+            else {
+                link="<a href='" + website + "' target='_blank'>" + place.name + "<a/>"
+            }
+
+            createTableRow(link,place)
+        });
+    }
+    else {
+        console.log(place.place_id + " was found, no need to fetch");
+
         var link='';
 
-        if(website=="N/A") {
+        if(websiteObj.website =="N/A") {
             link=''
         }
         else {
-            link="<a href='" + website + "' target='_blank'>" + website + "<a/>"
+            link="<a href='" + websiteObj.website + "' target='_blank'>" + place.name + "<a/>"
         }
-
+    
         createTableRow(link,place)
-    });
+    }
+
+    
 }
 
 function createTableRow(link,place) {
@@ -202,16 +230,16 @@ function createTableRow(link,place) {
     var checkboxId = 'checkbox_' + place.place_id.replace(/ /g, '_');
 
     if (userwineries.includes(place.place_id )) {
-        console.log('Array contains place_id');
+        //console.log('Array contains place_id');
         visited="checked"
     } else {
-        console.log('Array does not contain place_id');
+        //console.log('Array does not contain place_id');
         visited=""
     }
 
     checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place.place_id}" ${visited}>`;
 
-    dataTable.row.add([checkboxHTML, place.name, link, dirLink]).draw();
+    dataTable.row.add([checkboxHTML, link, dirLink]).draw();
 
     // Add the event listener after the row is added
     $(`#${checkboxId}`).on('change', function() {
