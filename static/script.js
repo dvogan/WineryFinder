@@ -116,6 +116,8 @@ function logCoordinates() {
 }
 
 function searchForWineries() {
+    alert("Hi Stacie :-)")
+
     dataTable.clear().draw();
 
    // Clear existing winery markers
