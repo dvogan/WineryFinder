@@ -11,7 +11,8 @@ print(f"Google API key: {googleApiKey}")
 import psycopg2
 
 #need to remove this!
-conn=psycopg2.connect("postgresql://postgres:6C2GGF6F5aAE5eeEeb1dc12Aaad2gbDB@viaduct.proxy.rlwy.net:14941/railway")
+print(os.environ.get('WINE_DATABASE_URL'))
+conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
 cursor = conn.cursor()
 
 testUser="1"
