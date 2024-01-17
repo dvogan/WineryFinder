@@ -116,7 +116,7 @@ function logCoordinates() {
 }
 
 function searchForWineries() {
-    alert("Hi Stacie :-)")
+    //alert("Hi Stacie :-)")
 
     dataTable.clear().draw();
 
