@@ -42,3 +42,22 @@ h1 {
     font-size: 24px;
     margin: 0;
 }
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    #banner h1 {
+        font-size: 24px; /* Smaller font for mobile */
+    }
+
+    #map, #results {
+        width: 100%; /* Full width on small screens */
+        padding: 10px; /* Optional: Adds some space around the content */
+    }
+
+    /* Adjust table layout for small screens */
+    #wineryTable {
+        width: 100%;
+        display: block;
+        overflow-x: auto; /* Allows table to be scrollable horizontally */
+    }
+}
