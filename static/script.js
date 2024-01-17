@@ -20,7 +20,13 @@ function initMap() {
         "paging": true, // Enable paging
         "searching": true, // Enable searching
         "ordering": true, // Enable sorting
-        "info": true // Show table information
+        "info": true, // Show table information
+        columnDefs: [
+            { targets: [0], width: '10%' }, 
+            { targets: [1], width: '30%' }, 
+            { targets: [2], width: '30%' }, 
+            { targets: [3], width: '30%' }, 
+        ]
     });
     dataTable.clear().draw();
 
@@ -103,7 +109,7 @@ function searchForWineries() {
             console.log(results);
            results.forEach(function (place) {
                createWineryMarker(place);
-               addToDataTable(place);
+               processPlace(place);
            });
        }
        else {
@@ -132,21 +138,38 @@ function createWineryMarker(place) {
    wineryMarkers.push(marker);
 }
 
-function addToDataTable(place) {
+function processPlace(place) {
     placeID = place.place_id;
 
     fetchPlaceWebsite(placeID, function (website) {
-        var link;
+        var link='';
 
         if(website=="N/A") {
             link=''
         }
         else {
             link="<a href='" + website + "' target='_blank'>" + website + "<a/>"
-
         }
-        dataTable.row.add([place.name, link]).draw();
+
+        createTableRow(link,place)
     });
+}
+
+function createTableRow(link,place) {
+    lat=place.geometry.location.lat()
+    lng=place.geometry.location.lng()
+
+    vicinity=place.vicinity
+    console.log(vicinity)
+
+    dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    dirLink=`<a href='${dirURL}' target='_blank'>${vicinity}`;
+
+    console.log(dirLink)
+
+    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place.name + '">';
+
+    dataTable.row.add([checkboxHTML, place.name, link, dirLink]).draw();
 }
 
 function fetchPlaceWebsite(placeId, callback) {
