@@ -32,11 +32,20 @@ body {
     align-items: center;
 }
 
+/* Base styles for the icon */
 #icon {
-    max-width: 40px; /* Set a maximum width for the icon */
-    height: auto; /* Allow the height to adjust automatically */
-    margin-right: 10px;
+    max-width: 100px; /* Adjust this value as needed */
+    height: auto; /* Maintain aspect ratio */
 }
+
+/* Responsive styles for smaller screens (e.g., iPhones) */
+@media screen and (max-width: 768px) {
+    #icon {
+        max-width: 50px; /* Smaller width for mobile devices */
+        height: auto;
+    }
+}
+
 
 h1 {
     font-size: 24px;

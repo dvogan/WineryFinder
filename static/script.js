@@ -2,6 +2,28 @@ var map;
 var wineryService;
 var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
+let userwineries;
+
+function getUserWineries() {
+    fetch('/getUserWineries', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle the wineries array returned from the Flask route
+        userwineries = data.wineries;
+        console.log('User Wineries:', userwineries);
+
+        // You can process the wineries array here, e.g., display them in your application
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
 
 function initMap() {
    map = new google.maps.Map(document.getElementById('map'), {
@@ -14,7 +36,12 @@ function initMap() {
         },
    });
 
+
+   getUserWineries();
+   
    wineryService = new google.maps.places.PlacesService(map);
+
+   
 
    dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
         "paging": true, // Enable paging
@@ -160,16 +187,56 @@ function createTableRow(link,place) {
     lng=place.geometry.location.lng()
 
     vicinity=place.vicinity
-    console.log(vicinity)
+    //console.log(vicinity)
 
     dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     dirLink=`<a href='${dirURL}' target='_blank'>${vicinity}`;
 
-    console.log(dirLink)
+    //console.log(dirLink)
 
-    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place.name + '">';
+    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place.place_id + '">';
+
+    // Create a unique ID for the checkbox (optional)
+    var checkboxId = 'checkbox_' + place.place_id.replace(/ /g, '_');
+
+    if (userwineries.includes(place.place_id )) {
+        console.log('Array contains place_id');
+        visited="checked"
+    } else {
+        console.log('Array does not contain place_id');
+        visited=""
+    }
+
+    checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place.place_id}" ${visited}>`;
 
     dataTable.row.add([checkboxHTML, place.name, link, dirLink]).draw();
+
+    // Add the event listener after the row is added
+    $(`#${checkboxId}`).on('change', function() {
+        // Check if the checkbox is checked or unchecked
+        var isChecked = $(this).is(':checked');
+
+        saveWinery(place.place_id, isChecked);
+    });
+}
+
+function saveWinery(place_id, state) {
+    console.log("::" + place_id);
+    $.ajax({
+        type: 'POST', // or 'GET' depending on your route
+        url: '/saveWinery', // Replace with your Flask route URL
+        data: {
+            place_id: place_id,
+            checkbox_state: state,
+        },
+        success: function(response) {
+            // Handle the Flask route response here
+            console.log('Flask route response:', response);
+        },
+        error: function(error) {
+            console.error('Error:', error);
+        }
+    });
 }
 
 function fetchPlaceWebsite(placeId, callback) {
