@@ -65,10 +65,10 @@ def handle_checkbox_state():
     print(response_data);
 
     if(checkbox_state=="true"):
-        print("insert")
+        #print("insert")
         sql=f"insert into userwineries (placeid,userid) values ('{place_id}','{testUser}')"
     else:
-        print("delete")
+        #print("delete")
         sql=f"delete from userwineries where placeid='{place_id}' and userid='{testUser}'"
         
     print(sql)
@@ -96,7 +96,7 @@ def get_user_wineries():
         #print(row)
         user_wineries.append(row[1])
 
-    print(user_wineries)
+    #print(user_wineries)
 
     # Return the wineries as JSON response
     return jsonify(wineries=user_wineries)

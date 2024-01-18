@@ -7,30 +7,29 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
 </head>
 <body>
     <div id="banner">
         <img src="{{ url_for('static', filename='winefinder_icon_3.png') }}" alt="Icon" id="icon">
         <h1 id="banner_title">Winery Finder</h1>
     </div>
-    <div id="map"></div>
-    <div id="results">
-        <h2>Wineries</h2>
-        <table id="wineryTable">
-            <thead>
-                <tr>
-                    <th>Visited?</th>
-                    <th>Name</th>
-                    <th>Directions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Winery data will be displayed here dynamically -->
-            </tbody>
-        </table>
+    <div id="content">
+        <div id="map"></div>
+        <div id="results">
+            <h2>Wineries search results</h2>
+            <table id="wineryTable">
+                <thead>
+                    <tr>
+                        <th>Visited?</th>
+                        <th>Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Winery data will be displayed here dynamically -->
+                </tbody>
+            </table>
+        </div>
     </div>
     <script src="/proxy-google-maps?callback=initMap&libraries=places" async defer></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>

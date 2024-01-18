@@ -5,6 +5,7 @@ var defaultLocation; // Will be set to the user's location
 let userwineries;
 var websites=[];
 var currentInfowindow = null;
+var extendedBounds;
 
 function getUserWineries() {
     return fetch('/getUserWineries', {
@@ -82,8 +83,7 @@ function initMap() {
         "info": true, // Show table information
         columnDefs: [
             { targets: [0], width: '10%' }, 
-            { targets: [1], width: '45%' }, 
-            { targets: [2], width: '45%' }, 
+            { targets: [1], width: '90%' }, 
         ]
     });
     dataTable.clear().draw();
@@ -129,25 +129,29 @@ function initMap() {
 
         logCoordinates();
         searchForWineries();
-
-        if (zoomLevel < 10) {
-            
-        } else {
-            // Example: If zoom level is greater than or equal to 10, do something else
-        }
     });
 }
-
-    
-
 
 function logCoordinates() {
    var center = map.getCenter();
    console.log('Map Center Coordinates: Lat ' + center.lat() + ', Lng ' + center.lng());
 }
 
+function extendBounds(bounds, paddingLat, paddingLng) {
+    // Northeast corner
+    var ne = bounds.getNorthEast();
+    var extendedNE = new google.maps.LatLng(ne.lat() + paddingLat, ne.lng() + paddingLng);
+
+    // Southwest corner
+    var sw = bounds.getSouthWest();
+    var extendedSW = new google.maps.LatLng(sw.lat() - paddingLat, sw.lng() - paddingLng);
+
+    // Create new extended bounds
+    var extendedBounds = new google.maps.LatLngBounds(extendedSW, extendedNE);
+    return extendedBounds;
+}
+
 function searchForWineries() {
-    //alert("Hi Stacie :-)")
 
     dataTable.clear().draw();
 
@@ -157,28 +161,54 @@ function searchForWineries() {
    });
    wineryMarkers = [];
 
-   // Define search parameters
-   var request = {
-       bounds: map.getBounds(),
-       keyword: 'winery',
-   };
+   
 
-   // Perform a Places API search
-   wineryService.nearbySearch(request, function (results, status) {
-       if (status === google.maps.places.PlacesServiceStatus.OK) {
-            console.log(results);
-           results.forEach(function (place) {
-               createWineryMarker(place);
-               processPlace(place);
-           });
+    // Get the current bounds
+    var currentBounds = map.getBounds();
 
-           console.log(websites.length + " sites cached");
-       }
-       else {
-            crossOriginIsolated.log("!!!!!")
-       }
-   });
+    // Define padding (latitude and longitude)
+    var paddingLat = -0.1; // Example padding in degrees latitude
+    var paddingLng = -0.1; // Example padding in degrees longitude
+
+    // Extend the bounds
+    extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
+
+    searchAndProcess('winery', extendedBounds);
+    searchAndProcess('vineyard', extendedBounds);
+
+   
 }
+
+var allPlaces = {}; // Object to store unique places
+
+function processSearchResults(results) {
+    results.forEach(function (place) {
+        if (!allPlaces.hasOwnProperty(place.place_id)) {
+            console.log(place.name);
+            console.log(place);
+
+            allPlaces[place.place_id] = place; // Store the place using its place_id
+            createWineryMarker(place); // Assuming this function creates markers
+            processPlace(place); // Your function to process the place data
+        }
+    });
+}
+
+function searchAndProcess(keyword,bounds) {
+    var request = {
+        bounds: bounds,
+        keyword: keyword,
+    };
+
+    wineryService.nearbySearch(request, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            processSearchResults(results);
+        } else {
+            console.log("Search for " + keyword + " failed: " + status);
+        }
+    });
+}
+
 
 function createWineryMarker(place) {
     var pinColor;
@@ -202,7 +232,7 @@ function createWineryMarker(place) {
         fillOpacity: 1,
         fillColor: pinColor,
         strokeWeight: 2,
-        strokeColor: pinColor,
+        strokeColor: "#000000",
         scale: 2,
         labelOrigin: labelOriginFilled
     };
@@ -215,7 +245,16 @@ function createWineryMarker(place) {
         place_id: place.place_id
     });
 
-   var contentString = '<div><h4>' + place.name + '</h4><p>' + place.vicinity + '</p></div>';
+    lat=place.geometry.location.lat()
+    lng=place.geometry.location.lng()
+
+    dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    dirLink=`<a href='${dirURL}' target='_blank'><img class='navIcon' src='/static/maps-icon-16.png'></a>`;
+
+    //console.log(dirLink)
+
+   var contentString = '<div><h4>' + place.name + '</h4></div>';
+   contentString += '<p>' + dirLink + '</p>'
    var infowindow = new google.maps.InfoWindow({
        content: contentString,
    });
@@ -250,7 +289,7 @@ function processPlace(place) {
             var link='';
 
             if(website =="N/A") {
-                link=''
+                link=place.name
             }
             else {
                 link="<a href='" + website + "' target='_blank'>" + place.name + "<a/>"
@@ -276,17 +315,6 @@ function processPlace(place) {
 }
 
 function createTableRow(link,place) {
-    lat=place.geometry.location.lat()
-    lng=place.geometry.location.lng()
-
-    vicinity=place.vicinity
-    //console.log(vicinity)
-
-    dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    dirLink=`<a href='${dirURL}' target='_blank'>${vicinity}`;
-
-    //console.log(dirLink)
-
     var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place.place_id + '">';
 
     // Create a unique ID for the checkbox (optional)
@@ -302,7 +330,7 @@ function createTableRow(link,place) {
 
     checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place.place_id}" ${visited}>`;
 
-    dataTable.row.add([checkboxHTML, link, dirLink]).draw();
+    dataTable.row.add([checkboxHTML, link]).draw();
 
     // Add the event listener after the row is added
     $(`#${checkboxId}`).on('change', function() {

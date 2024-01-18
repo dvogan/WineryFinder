@@ -5,13 +5,27 @@ body {
 }
 
 #map {
-    height: 400px;
-    width: 100%;
+    width: 50%;
+    /* Adjust height as needed */
+    height: 500px;
 }
 
 #results {
-    padding: 20px;
+    width: 50%;
+    padding: 10px;
 }
+
+#content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.navIcon {
+    width:32px;
+    height: 32px;
+}
+
 
 #wineryTable {
     width: 100%;
@@ -30,6 +44,7 @@ body {
     padding: 10px;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 #banner_title {
@@ -43,34 +58,13 @@ body {
 }
 
 /* Responsive styles for smaller screens (e.g., iPhones) */
-@media screen and (max-width: 768px) {
-    #icon {
-        max-width: 50px; /* Smaller width for mobile devices */
-        height: auto;
-    }
-}
-
-
-h1 {
-    font-size: 24px;
-    margin: 0;
-}
-
-/* Responsive styles */
-@media screen and (max-width: 768px) {
-    #banner h1 {
-        font-size: 24px; /* Smaller font for mobile */
+@media screen and (max-width: 768px) { /* Adjust the breakpoint as needed */
+    #content {
+        flex-direction: column;
     }
 
     #map, #results {
-        width: 100%; /* Full width on small screens */
-        padding: 10px; /* Optional: Adds some space around the content */
-    }
-
-    /* Adjust table layout for small screens */
-    #wineryTable {
         width: 100%;
-        display: block;
-        overflow-x: auto; /* Allows table to be scrollable horizontally */
     }
 }
+
