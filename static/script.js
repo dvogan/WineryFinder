@@ -4,9 +4,10 @@ var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
 let userwineries;
 var websites=[];
+var currentInfowindow = null;
 
 function getUserWineries() {
-    fetch('/getUserWineries', {
+    return fetch('/getUserWineries', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -14,17 +15,49 @@ function getUserWineries() {
     })
     .then(response => response.json())
     .then(data => {
-        // Handle the wineries array returned from the Flask route
         userwineries = data.wineries;
         console.log('User Wineries:', userwineries);
 
-        // You can process the wineries array here, e.g., display them in your application
+        // Return data for further processing if needed
+        return data;
     })
     .catch(error => {
         console.error('Error:', error);
+        // It's important to re-throw the error so it can be caught by the caller
+        throw error;
     });
 }
 
+async function processUserWineries() {
+    try {
+        let data = await getUserWineries();
+        // Continue processing with the data
+        console.log('Processing User Wineries:', data.wineries);
+    } catch (error) {
+        console.error('Error while processing user wineries:', error);
+    }
+}
+
+async function updatePin(place) {
+    try {
+        let data = await getUserWineries();
+        userwineries=data.wineries
+
+        console.log("look for marker")
+
+        wineryMarkers.forEach(function (marker) {
+            console.log(marker);
+            if(marker.place_id == place.place_id) {
+               console.log("found marker");
+               marker.setMap(null);
+               createWineryMarker(place)
+            }
+        });
+
+    } catch (error) {
+        console.error('Error while processing user wineries:', error);
+    }
+}
 
 function initMap() {
    map = new google.maps.Map(document.getElementById('map'), {
@@ -38,11 +71,9 @@ function initMap() {
    });
 
 
-   getUserWineries();
+   processUserWineries();
    
    wineryService = new google.maps.places.PlacesService(map);
-
-   
 
    dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
         "paging": true, // Enable paging
@@ -69,20 +100,20 @@ function initMap() {
            };
            defaultLocation = userLocation; // Set the defaultLocation to the user's location
            map.setCenter(defaultLocation); // Set the map center to the user's location
-           searchForWineries(defaultLocation); // Perform initial search
+           searchForWineries(); // Perform initial search
        }, function () {
             console.log("geolocation failed");
            // Handle errors if geolocation fails
            defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
            map.setCenter(defaultLocation); // Set the map center to the default location
-           searchForWineries(defaultLocation); // Perform initial search
+           searchForWineries(); // Perform initial search
        });
    } else {
         console.log("geolocation not available");
        // Geolocation is not available, use the default location
        defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
        map.setCenter(defaultLocation); // Set the map center to the default location
-       searchForWineries(defaultLocation); // Perform initial search
+       searchForWineries(); // Perform initial search
    }
 
    // Add an event listener for map dragging (panning)
@@ -150,20 +181,54 @@ function searchForWineries() {
 }
 
 function createWineryMarker(place) {
-   var marker = new google.maps.Marker({
-       map: map,
-       position: place.geometry.location,
-       title: place.name,
-   });
+    var pinColor;
 
-   // Create info window for each marker
+    if (userwineries.includes(place.place_id )) {
+        pinColor="#32cd32"
+    } else {
+        pinColor="#ff0000"
+    }
+
+    //console.log(pinColor)
+    
+    var pinLabel = "A";
+    var pinSVGHole = "M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z";
+    var labelOriginHole = new google.maps.Point (12,15);
+    var pinSVGFilled = "M 12,2 C 8.1340068,2 5,5.1340068 5,9 c 0,5.25 7,13 7,13 0,0 7,-7.75 7,-13 0,-3.8659932 -3.134007,-7 -7,-7 z";
+    var labelOriginFilled = new google.maps.Point (12,9);
+    var markerImage = {
+        path: pinSVGFilled,
+        anchor: new google.maps.Point (12,17),
+        fillOpacity: 1,
+        fillColor: pinColor,
+        strokeWeight: 2,
+        strokeColor: pinColor,
+        scale: 2,
+        labelOrigin: labelOriginFilled
+    };
+
+    marker = new google.maps.Marker ( {
+        map: map,
+        position: place.geometry.location,
+        icon: markerImage,
+        title: place.name,
+        place_id: place.place_id
+    });
+
    var contentString = '<div><h4>' + place.name + '</h4><p>' + place.vicinity + '</p></div>';
    var infowindow = new google.maps.InfoWindow({
        content: contentString,
    });
 
    marker.addListener('click', function () {
-       infowindow.open(map, marker);
+        // Close the current InfoWindow if it's open
+        if (currentInfowindow) {
+            currentInfowindow.close();
+        }
+
+       infowindow.open(map, this);
+
+       currentInfowindow = infowindow;
    });
 
    wineryMarkers.push(marker);
@@ -175,7 +240,7 @@ function processPlace(place) {
     let websiteObj = websites.find(obj => obj.place_id === place.place_id);
 
     if(!websiteObj) {
-        console.log(place.place_id + " not found, fetching");
+        //console.log(place.place_id + " not found, fetching");
 
         fetchPlaceWebsite(place.place_id, function (website) {
             newObj={"place_id":place.place_id,"website":website}
@@ -195,7 +260,7 @@ function processPlace(place) {
         });
     }
     else {
-        console.log(place.place_id + " was found, no need to fetch");
+        //console.log(place.place_id + " was found, no need to fetch");
 
         var link='';
 
@@ -208,8 +273,6 @@ function processPlace(place) {
     
         createTableRow(link,place)
     }
-
-    
 }
 
 function createTableRow(link,place) {
@@ -246,22 +309,25 @@ function createTableRow(link,place) {
         // Check if the checkbox is checked or unchecked
         var isChecked = $(this).is(':checked');
 
-        saveWinery(place.place_id, isChecked);
+        saveWinery(place, isChecked);
     });
 }
 
-function saveWinery(place_id, state) {
-    console.log("::" + place_id);
+function saveWinery(place, state) {
+    console.log("saveWinery: " + place);
+
     $.ajax({
-        type: 'POST', // or 'GET' depending on your route
-        url: '/saveWinery', // Replace with your Flask route URL
+        type: 'POST', 
+        url: '/saveWinery',
         data: {
-            place_id: place_id,
+            place_id: place.place_id,
             checkbox_state: state,
         },
         success: function(response) {
-            // Handle the Flask route response here
             console.log('Flask route response:', response);
+            
+            processUserWineries();
+            updatePin(place)
         },
         error: function(error) {
             console.error('Error:', error);

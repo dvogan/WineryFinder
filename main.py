@@ -76,6 +76,8 @@ def handle_checkbox_state():
     cursor.execute(sql)
     conn.commit()
 
+    return response_data
+
 @app.route('/getUserWineries', methods=['GET'])
 def get_user_wineries():
     # Query your database to retrieve user wineries as a list or array
