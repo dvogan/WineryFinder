@@ -4,21 +4,23 @@ body {
     padding: 0;
 }
 
-#map {
-    width: 50%;
-    /* Adjust height as needed */
-    height: 500px;
-}
-
 #results {
     width: 50%;
-    padding: 10px;
+    /* If you want the results div to also fill the height */
+    height: 100%; 
+    padding-left: 10px;
 }
 
 #content {
     display: flex;
     flex-direction: row;
+    flex: 1; /* This makes sure it fills up the remaining space */
     justify-content: space-between;
+}
+
+#map {
+    width: 50%;
+    height: 100%; /* Fill the height of its parent */
 }
 
 .navIcon {
@@ -31,13 +33,14 @@ body {
     width: 100%;
 }
 
-#wwineryTableth {
-    background-color: #f2f2f2;
+#wineryTable tbody tr:nth-child(even) {
+    background-color: #f2f2f2; /* Light gray background */
 }
 
-/* Add this to style.css */
+#wineryTable thead th {
+    background-color: #f2f2f2; /* Light gray background for header */
+}
 
-/* Add this to style.css */
 #banner {
     background-color: #494277;
     color: #ffffff;
@@ -45,6 +48,8 @@ body {
     display: flex;
     align-items: center;
     width: 100%;
+    max-height: 10vh;
+    min-height: 10vh;
 }
 
 #banner_title {
@@ -68,3 +73,48 @@ body {
     }
 }
 
+#map, #results {
+    min-height: 300px; /* Minimum height for smaller screens */
+}
+
+@media screen and (min-width: 768px) { 
+    #map, #results {
+        height: 100%; 
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #content {
+        flex-direction: column;
+    }
+
+    #map, #results {
+        width: 100%;
+    }
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+#page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ensuring it takes the full viewport height */
+}
+
+#content-wrap {
+    flex: 1; /* Fill the available space */
+    display: flex; /* Adding this to ensure proper flexbox behavior */
+    flex-direction: column; /* Ensuring column direction for proper stretching */
+}
+#footer {
+    /* Footer styling */
+    background-color: #494277;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    max-height: 5vh;
+    min-height: 5vh;
+}
