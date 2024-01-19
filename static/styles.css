@@ -79,14 +79,14 @@ body {
 }
 
 /* Media query for landscape orientation */
-@media screen and (min-width: 820) and (orientation: portrait) {
+@media screen and (min-width: 810) and (orientation: portrait) {
     #content {
         flex-direction: column;
     }
 
     #map, #results {
-        width: 100%; /* Each takes half the width in portrait mode */
-        height: 100%; /* Full height */
+        width: 100%; /* Each takes full width in portrait mode */
+        height: 50%; /* Full height */
     }
 }
 
