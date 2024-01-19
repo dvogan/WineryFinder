@@ -9,6 +9,7 @@ body {
     /* If you want the results div to also fill the height */
     height: 100%; 
     padding-left: 10px;
+    padding-right: 10px;
 }
 
 #content {
@@ -20,6 +21,8 @@ body {
 #map {
     width: 50%;
     height: 100%; /* Fill the height of its parent */
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .navIcon {

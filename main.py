@@ -88,6 +88,8 @@ def get_user_wineries():
 
     print(sql)
 
+    print(conn)
+
     cursor = conn.cursor()
     cursor.execute(sql)
 
