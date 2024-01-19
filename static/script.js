@@ -258,6 +258,7 @@ function createWineryMarker(place) {
    var infowindow = new google.maps.InfoWindow({
        content: contentString,
    });
+   
 
    marker.addListener('click', function () {
         // Close the current InfoWindow if it's open
