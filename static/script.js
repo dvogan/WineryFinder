@@ -11,7 +11,7 @@ var extendedBounds;
 function printScreenSize() {
     var width = window.innerWidth;
     var height = window.innerHeight;
-    alert("Width: " + width + "px, Height: " + height + "px");
+    console.log("Width: " + width + "px, Height: " + height + "px");
 }
 
 // Event listener for window resize/orientation change
