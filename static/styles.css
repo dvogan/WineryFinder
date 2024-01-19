@@ -79,7 +79,7 @@ body {
 }
 
 /* Media query for landscape orientation */
-@media screen and (min-width: 768px) and (orientation: portrait) {
+@media screen and (min-width: 820) and (orientation: portrait) {
     #content {
         flex-direction: column;
     }
