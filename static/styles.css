@@ -78,14 +78,15 @@ body {
     min-height: 300px; /* Adjust as needed */
 }
 
-/* Ensure the content expands vertically in portrait mode */
-@media screen and (max-width: 1024px)  {
-    #content-wrap {
+/* Media query for landscape orientation */
+@media screen and (min-width: 768px) and (orientation: portrait) {
+    #content {
         flex-direction: column;
     }
 
-    #content {
-        flex: 1; /* Expand content to take available space */
+    #map, #results {
+        width: 100%; /* Each takes half the width in portrait mode */
+        height: 100%; /* Full height */
     }
 }
 
