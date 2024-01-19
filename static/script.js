@@ -7,6 +7,20 @@ var websites=[];
 var currentInfowindow = null;
 var extendedBounds;
 
+// Function to print the screen size
+function printScreenSize() {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    alert("Width: " + width + "px, Height: " + height + "px");
+}
+
+// Event listener for window resize/orientation change
+window.addEventListener('resize', printScreenSize);
+
+// Call the function initially to display the size on load
+printScreenSize();
+
+
 function getUserWineries() {
     return fetch('/getUserWineries', {
         method: 'GET',
