@@ -69,14 +69,10 @@ body {
     width: 300px;
 }
 
-#signup_link {
+#auth_link {
+    margin-left: auto;
     color: white;
-    padding-left: 25px;
-}
-
-#signin_link {
-    color: white;
-    padding-left: 25px;
+    padding-right: 25px;
 }
 
 
