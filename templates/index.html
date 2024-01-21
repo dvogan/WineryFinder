@@ -8,6 +8,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+        
 </head>
 <body>
     <div id="page-container">
@@ -15,6 +18,11 @@
             <div id="banner">
                 <img src="{{ url_for('static', filename='winefinder_icon_3.png') }}" alt="Icon" id="icon">
                 <h1 id="banner_title">Winery Finder</h1>
+                <div id="authdiv">
+                    <a href="#" id="signup_link">Sign Up</a>
+                    <a href="#" id="signin_link">Sign In</a>
+                    <a href="#" id="userbutton"></a>
+                </div>
             </div>
             <div id="content">
                 <div id="map"></div>
@@ -40,5 +48,29 @@
     </div>
     <script src="/proxy-google-maps?callback=initMap&libraries=places" async defer></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+
+    <script>
+        // Get this URL and Publishable Key from the Clerk Dashboard
+        const clerkPublishableKey = 'pk_test_c2V0dGxlZC1zaGFyay04OC5jbGVyay5hY2NvdW50cy5kZXYk';
+        const frontendApi = 'settled-shark-88.clerk.accounts.dev';
+        const version = '@latest'; // Set to appropriate version
+       
+        // Creates asynchronous script
+        const script = document.createElement('script');
+        script.setAttribute('data-clerk-frontend-api', frontendApi);
+        script.setAttribute('data-clerk-publishable-key', clerkPublishableKey);
+        script.async = true;
+        script.src = `https://${frontendApi}/npm/@clerk/clerk-js${version}/dist/clerk.browser.js`;
+       
+        // Adds listener to initialize ClerkJS after it's loaded
+        script.addEventListener('load', async function () {
+          await window.Clerk.load({
+            // Set load options here...
+          });
+        });
+        document.body.appendChild(script);
+    </script>
+    
 </body>
 </html>

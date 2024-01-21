@@ -16,6 +16,56 @@ function printScreenSize() {
 
 // Event listener for window resize/orientation change
 window.addEventListener('resize', printScreenSize);
+  
+// Adds listener to initialize ClerkJS after it's loaded
+window.addEventListener('load', async function () {
+    const clerk = window.Clerk;
+    
+    console.log("clerk.user")
+    console.log(clerk.user)
+
+    var signin_link = document.getElementById('signin_link'); 
+    var signup_link = document.getElementById('signup_link'); 
+    var userbutton = document.getElementById('userbutton'); 
+
+    if (signin_link) {
+        signin_link.addEventListener('click', function(event) {
+            // Prevent default action of the link
+            event.preventDefault();
+
+            window.Clerk.openSignIn(signin_link, {
+                appearance: {
+                  baseTheme: 'dark'
+                }
+              });
+        });
+    }
+
+    if (signup_link) {
+        signup_link.addEventListener('click', function(event) {
+            // Prevent default action of the link
+            event.preventDefault();
+
+            window.Clerk.openSignUp(signup_link, {
+                appearance: {
+                  baseTheme: 'dark'
+                }
+              });
+        });
+    }
+    
+    if(clerk.user) {
+        signin_link.style.display = 'none';
+        signup_link.style.display = 'none';
+
+        window.Clerk.mountUserButton(userbutton, {
+            appearance: {
+              baseTheme: 'dark'
+            },
+            afterSignOutUrl: "http://127.0.0.1:5000"
+        });
+    }
+});
 
 // Call the function initially to display the size on load
 printScreenSize();

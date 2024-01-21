@@ -87,8 +87,9 @@ def get_user_wineries():
     sql+= " ORDER BY placeid"
 
     print(sql)
-
-    print(conn)
+    global conn
+    if conn.closed:
+        conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
 
     cursor = conn.cursor()
     cursor.execute(sql)

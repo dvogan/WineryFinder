@@ -51,11 +51,34 @@ body {
     width: 100%;
     max-height: 10vh;
     min-height: 10vh;
+    justify-content: space-between;
+}
+
+#banner > #icon, 
+#banner > #banner_title {
+    margin-right: auto; /* Keeps logo and title on the left */
 }
 
 #banner_title {
     font-size:xx-large;
 }
+
+#authdiv {
+    display: flex;
+    align-items: center;
+    width: 300px;
+}
+
+#signup_link {
+    color: white;
+    padding-left: 25px;
+}
+
+#signin_link {
+    color: white;
+    padding-left: 25px;
+}
+
 
 /* Base styles for the icon */
 #icon {
