@@ -6,6 +6,7 @@ let userwineries;
 var websites=[];
 var currentInfowindow = null;
 var extendedBounds;
+var clerk;
 
 // Function to print the screen size
 function printScreenSize() {
@@ -15,11 +16,11 @@ function printScreenSize() {
 }
 
 // Event listener for window resize/orientation change
-window.addEventListener('resize', printScreenSize);
+//window.addEventListener('resize', printScreenSize);
   
 // Adds listener to initialize ClerkJS after it's loaded
 window.addEventListener('load', async function () {
-    const clerk = window.Clerk;
+    clerk = window.Clerk;
     
     console.log("clerk.user")
     console.log(clerk.user)
@@ -49,8 +50,7 @@ window.addEventListener('load', async function () {
 });
 
 // Call the function initially to display the size on load
-printScreenSize();
-
+//printScreenSize();
 
 function getUserWineries() {
     return fetch('/getUserWineries', {
@@ -228,13 +228,16 @@ var allPlaces = {}; // Object to store unique places
 
 function processSearchResults(results) {
     results.forEach(function (place) {
-        if (!allPlaces.hasOwnProperty(place.place_id)) {
-            console.log(place.name);
-            console.log(place);
+        console.log(place.types)
+        if(place.types.includes('food')) {
+            if (!allPlaces.hasOwnProperty(place.place_id)) {
+                console.log(place.name);
+                console.log(place);
 
-            allPlaces[place.place_id] = place; // Store the place using its place_id
-            createWineryMarker(place); // Assuming this function creates markers
-            processPlace(place); // Your function to process the place data
+                allPlaces[place.place_id] = place; // Store the place using its place_id
+                createWineryMarker(place); // Assuming this function creates markers
+                processPlace(place); // Your function to process the place data
+            }
         }
     });
 }
@@ -378,13 +381,22 @@ function createTableRow(link,place) {
 
     dataTable.row.add([checkboxHTML, link]).draw();
 
-    // Add the event listener after the row is added
-    $(`#${checkboxId}`).on('change', function() {
-        // Check if the checkbox is checked or unchecked
-        var isChecked = $(this).is(':checked');
+    console.log(clerk.user);
+    if(clerk.user) {
+        $(`#${checkboxId}`).on('change', function() {
+            var isChecked = $(this).is(':checked');
 
-        saveWinery(place, isChecked);
-    });
+            saveWinery(place, isChecked);
+        });
+    }
+    else {
+        $(`#${checkboxId}`).on('click', function() {
+            event.preventDefault();
+
+            // Call the alert function
+            alert('Please create an account to use this feature.');
+        });
+    }
 }
 
 function saveWinery(place, state) {
