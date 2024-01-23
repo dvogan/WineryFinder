@@ -75,6 +75,11 @@ body {
     padding-right: 25px;
 }
 
+#myWineriesLink {
+    margin-left: auto;
+    color: white;
+}
+
 
 /* Base styles for the icon */
 #icon {

@@ -26,7 +26,11 @@ window.addEventListener('load', async function () {
     console.log(clerk.user)
 
     var auth_link = document.getElementById('auth_link');  
+    var myWineriesLink = this.document.getElementById('myWineriesLink')
+
     if(clerk.user) {
+        processUserWineries();
+
         window.Clerk.mountUserButton(auth_link, {
             appearance: {
               baseTheme: 'dark'
@@ -46,6 +50,8 @@ window.addEventListener('load', async function () {
                 }
               });
         });
+
+        myWineriesLink.style.display = 'none';
     }
 });
 
@@ -53,7 +59,9 @@ window.addEventListener('load', async function () {
 //printScreenSize();
 
 function getUserWineries() {
-    return fetch('/getUserWineries', {
+    console.log(clerk.user.id)
+
+    return fetch('/getUserWineries?user=' + clerk.user.id, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -115,9 +123,6 @@ function initMap() {
             mapTypeIds: [google.maps.MapTypeId.ROADMAP], // Only allow the roadmap type
         },
    });
-
-
-   processUserWineries();
    
    wineryService = new google.maps.places.PlacesService(map);
 
@@ -216,10 +221,10 @@ function searchForWineries() {
     var paddingLng = -0.1; // Example padding in degrees longitude
 
     // Extend the bounds
-    extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
+    //extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
 
-    searchAndProcess('winery', extendedBounds);
-    searchAndProcess('vineyard', extendedBounds);
+    searchAndProcess('winery', currentBounds);
+    searchAndProcess('vineyard', currentBounds);
 
    
 }
@@ -228,7 +233,7 @@ var allPlaces = {}; // Object to store unique places
 
 function processSearchResults(results) {
     results.forEach(function (place) {
-        console.log(place.types)
+        //console.log(place.types)
         if(place.types.includes('food')) {
             if (!allPlaces.hasOwnProperty(place.place_id)) {
                 console.log(place.name);
@@ -261,9 +266,14 @@ function searchAndProcess(keyword,bounds) {
 function createWineryMarker(place) {
     var pinColor;
 
-    if (userwineries.includes(place.place_id )) {
-        pinColor="#32cd32"
-    } else {
+    if(userwineries) {
+        if (userwineries.includes(place.place_id )) {
+            pinColor="#32cd32"
+        } else {
+            pinColor="#ff0000"
+        }
+    }
+    else {
         pinColor="#ff0000"
     }
 
@@ -381,7 +391,7 @@ function createTableRow(link,place) {
 
     dataTable.row.add([checkboxHTML, link]).draw();
 
-    console.log(clerk.user);
+    //console.log(clerk.user);
     if(clerk.user) {
         $(`#${checkboxId}`).on('change', function() {
             var isChecked = $(this).is(':checked');
@@ -408,6 +418,7 @@ function saveWinery(place, state) {
         data: {
             place_id: place.place_id,
             checkbox_state: state,
+            user: clerk.user.id
         },
         success: function(response) {
             console.log('Flask route response:', response);

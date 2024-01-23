@@ -14,8 +14,6 @@ import psycopg2
 print(os.environ.get('WINE_DATABASE_URL'))
 conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
 
-testUser="1"
-
 app = Flask(__name__)
 
 @app.route('/')
@@ -55,6 +53,7 @@ def get_place_website():
 def handle_checkbox_state():
     place_id = request.form.get('place_id')
     checkbox_state = request.form.get('checkbox_state')
+    user = request.form.get('user')
 
     # Handle the checkbox state here, e.g., perform actions based on checked or unchecked state
     # You can return a response as needed
@@ -66,10 +65,10 @@ def handle_checkbox_state():
 
     if(checkbox_state=="true"):
         #print("insert")
-        sql=f"insert into userwineries (placeid,userid) values ('{place_id}','{testUser}')"
+        sql=f"insert into userwineries (placeid,userid) values ('{place_id}','{user}')"
     else:
         #print("delete")
-        sql=f"delete from userwineries where placeid='{place_id}' and userid='{testUser}'"
+        sql=f"delete from userwineries where placeid='{place_id}' and userid='{user}'"
         
     print(sql)
     cursor = conn.cursor()
@@ -80,10 +79,12 @@ def handle_checkbox_state():
 
 @app.route('/getUserWineries', methods=['GET'])
 def get_user_wineries():
+    user = request.args.get('user')
+
     # Query your database to retrieve user wineries as a list or array
     user_wineries = []  # Replace with your database query
 
-    sql="SELECT * FROM userwineries WHERE userid = '{0}' ".format(testUser)
+    sql="SELECT * FROM userwineries WHERE userid = '{0}' ".format(user)
     sql+= " ORDER BY placeid"
 
     print(sql)
