@@ -34,20 +34,52 @@ def proxy_google_maps():
 @app.route('/get-place-website', methods=['GET'])
 def get_place_website():
     place_id = request.args.get('place_id')
-    api_key = googleApiKey  # Keep your API Key here
+    api_key = googleApiKey
 
-    url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=website&key={api_key}"
-    response = requests.get(url)
-    data = response.json()
+    sql = f"select url from wineries where placeid='{place_id}'"
+    #print(sql)
+    global conn
+    if conn.closed:
+        conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
 
-    if data['status'] == 'OK':
-        try:
-            website=data['result']['website']
-            return jsonify(website=website)
-        except:
-            return jsonify(website='N/A')
+    cursor = conn.cursor()
+    cursor.execute(sql)
+
+    row = cursor.fetchone()
+
+    #print(row)
+
+    if row is not None:
+        website=row[0]
+        return jsonify(website=website)
     else:
-        return jsonify(error=data['status']), 400
+        print("RETRIEVE WEBSITE URL FROM GOOGLE!!")
+
+        url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=website&key={api_key}"
+        response = requests.get(url)
+        data = response.json()
+
+        if data['status'] == 'OK':
+            try:
+                website=data['result']['website']
+
+                sql=f"insert into wineries values ('{place_id}','{website}')"
+                #print(sql)
+                cursor.execute(sql)
+                conn.commit()
+
+                return jsonify(website=website)
+            except Exception as e:
+                print(f"An error occurred: {e}")
+
+                sql=f"insert into wineries values ('{place_id}','N/A')"
+                #print(sql)
+                cursor.execute(sql)
+                conn.commit()
+
+                return jsonify(website='N/A')
+        else:
+            return jsonify(error=data['status']), 400
     
 @app.route('/saveWinery', methods=['POST'])
 def handle_checkbox_state():

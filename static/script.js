@@ -379,11 +379,16 @@ function createTableRow(link,place) {
     // Create a unique ID for the checkbox (optional)
     var checkboxId = 'checkbox_' + place.place_id.replace(/ /g, '_');
 
-    if (userwineries.includes(place.place_id )) {
-        //console.log('Array contains place_id');
-        visited="checked"
-    } else {
-        //console.log('Array does not contain place_id');
+    if(clerk.user) {
+        if (userwineries.includes(place.place_id )) {
+            //console.log('Array contains place_id');
+            visited="checked"
+        } else {
+            //console.log('Array does not contain place_id');
+            visited=""
+        }
+    }
+    else {
         visited=""
     }
 
