@@ -3,10 +3,18 @@ var wineryService;
 var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
 let userwineries;
-var websites=[];
+var placesDetails=[];
 var currentInfowindow = null;
 var extendedBounds;
 var clerk;
+
+  // Global definition of CustomInfoWindow
+function CustomInfoWindow() {
+    google.maps.InfoWindow.call(this);
+    // Additional customization
+}
+//CustomInfoWindow.prototype = new google.maps.InfoWindow();
+//CustomInfoWindow.prototype.constructor = CustomInfoWindow;
 
 // Function to print the screen size
 function printScreenSize() {
@@ -35,7 +43,7 @@ window.addEventListener('load', async function () {
             appearance: {
               baseTheme: 'dark'
             },
-            afterSignOutUrl: "http://127.0.0.1:5000"
+            afterSignOutUrl: "/"
         });
         auth_link.textContent= "";
     }
@@ -55,9 +63,6 @@ window.addEventListener('load', async function () {
     }
 });
 
-// Call the function initially to display the size on load
-//printScreenSize();
-
 function getUserWineries() {
     console.log(clerk.user.id)
 
@@ -69,9 +74,6 @@ function getUserWineries() {
     })
     .then(response => response.json())
     .then(data => {
-        userwineries = data.wineries;
-        console.log('User Wineries:', userwineries);
-
         // Return data for further processing if needed
         return data;
     })
@@ -85,26 +87,23 @@ function getUserWineries() {
 async function processUserWineries() {
     try {
         let data = await getUserWineries();
-        // Continue processing with the data
-        console.log('Processing User Wineries:', data.wineries);
+        userwineries = data.wineries;
+        console.log('User Wineries:', userwineries);
     } catch (error) {
         console.error('Error while processing user wineries:', error);
     }
 }
 
-async function updatePin(place) {
+async function updatePin(place_details) {
     try {
-        let data = await getUserWineries();
-        userwineries=data.wineries
-
-        console.log("look for marker")
+       console.log("look for marker")
 
         wineryMarkers.forEach(function (marker) {
             console.log(marker);
-            if(marker.place_id == place.place_id) {
+            if(marker.place_id == place_details.place.place_id) {
                console.log("found marker");
                marker.setMap(null);
-               createWineryMarker(place)
+               createWineryMarker(place_details)
             }
         });
 
@@ -112,6 +111,7 @@ async function updatePin(place) {
         console.error('Error while processing user wineries:', error);
     }
 }
+
 
 function initMap() {
    map = new google.maps.Map(document.getElementById('map'), {
@@ -123,6 +123,7 @@ function initMap() {
             mapTypeIds: [google.maps.MapTypeId.ROADMAP], // Only allow the roadmap type
         },
    });
+
    
    wineryService = new google.maps.places.PlacesService(map);
 
@@ -234,15 +235,9 @@ var allPlaces = {}; // Object to store unique places
 function processSearchResults(results) {
     results.forEach(function (place) {
         //console.log(place.types)
+        //console.log(allPlaces);
         if(place.types.includes('food')) {
-            if (!allPlaces.hasOwnProperty(place.place_id)) {
-                console.log(place.name);
-                console.log(place);
-
-                allPlaces[place.place_id] = place; // Store the place using its place_id
-                createWineryMarker(place); // Assuming this function creates markers
-                processPlace(place); // Your function to process the place data
-            }
+            processPlace(place); 
         }
     });
 }
@@ -262,12 +257,50 @@ function searchAndProcess(keyword,bounds) {
     });
 }
 
+function processPlace(place) {
+    let place_details = placesDetails.find(obj => obj.place && obj.place.place_id === place.place_id);
 
-function createWineryMarker(place) {
+    if(!place_details) {
+        console.log(place.place_id + " not found, fetching");
+
+        fetchPlaceDetails(place.place_id, function (details) {
+            place_details={"place_id":place.place_id,"details":details,"place":place}
+
+            //console.log("--")
+            console.log(place_details)
+            //console.log("--")
+
+            placesDetails.push(place_details)
+            console.log(placesDetails.length) 
+
+            displayPlace(place_details)
+        });
+    }
+    else {
+        //console.log(place.place_id + " was found, no need to fetch");
+
+        displayPlace(place_details)
+    }
+}
+
+function displayPlace(place_details) {
+    var link='';
+
+    //console.log(place_details)
+
+    if(place_details.details.website) {
+        link="<a href='" + place_details.details.website + "' target='_blank'>" + place_details.place.name + "<a/>"
+    }
+    else {
+        link=place_details.place.name
+    }
+
+    createTableRow(link,place_details)
+
     var pinColor;
 
     if(userwineries) {
-        if (userwineries.includes(place.place_id )) {
+        if (userwineries.includes(place_details.place.place_id )) {
             pinColor="#32cd32"
         } else {
             pinColor="#ff0000"
@@ -297,25 +330,28 @@ function createWineryMarker(place) {
 
     marker = new google.maps.Marker ( {
         map: map,
-        position: place.geometry.location,
+        position: place_details.place.geometry.location,
         icon: markerImage,
-        title: place.name,
-        place_id: place.place_id
+        title: place_details.place.name,
+        place_id: place_details.place.place_id
     });
 
-    lat=place.geometry.location.lat()
-    lng=place.geometry.location.lng()
+    lat=place_details.place.geometry.location.lat()
+    lng=place_details.place.geometry.location.lng()
 
     dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     dirLink=`<a href='${dirURL}' target='_blank'><img class='navIcon' src='/static/maps-icon-16.png'></a>`;
 
     //console.log(dirLink)
 
-   var contentString = '<div><h4>' + place.name + '</h4></div>';
+   var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + link + '</h4></div>';
    contentString += '<p>' + dirLink + '</p>'
-   var infowindow = new google.maps.InfoWindow({
-       content: contentString,
-   });
+   contentString += '<p class="directions">' + place_details.details.opening_hours.weekday_text.join('<br>'); + '</p>'
+
+
+    var infoWindow = new google.maps.InfoWindow();
+    infoWindow.setContent(contentString);
+
    
 
    marker.addListener('click', function () {
@@ -324,63 +360,23 @@ function createWineryMarker(place) {
             currentInfowindow.close();
         }
 
-       infowindow.open(map, this);
+        infoWindow.setPosition(marker.getPosition());
+        infoWindow.setMap(map);
 
-       currentInfowindow = infowindow;
+       currentInfowindow = infoWindow;
    });
 
    wineryMarkers.push(marker);
 }
 
-function processPlace(place) {
-    //console.log(place.place_id);
-
-    let websiteObj = websites.find(obj => obj.place_id === place.place_id);
-
-    if(!websiteObj) {
-        //console.log(place.place_id + " not found, fetching");
-
-        fetchPlaceWebsite(place.place_id, function (website) {
-            newObj={"place_id":place.place_id,"website":website}
-            websites.push(newObj)
-            //console.log(newObj)
-
-            var link='';
-
-            if(website =="N/A") {
-                link=place.name
-            }
-            else {
-                link="<a href='" + website + "' target='_blank'>" + place.name + "<a/>"
-            }
-
-            createTableRow(link,place)
-        });
-    }
-    else {
-        //console.log(place.place_id + " was found, no need to fetch");
-
-        var link='';
-
-        if(websiteObj.website =="N/A") {
-            link=''
-        }
-        else {
-            link="<a href='" + websiteObj.website + "' target='_blank'>" + place.name + "<a/>"
-        }
-    
-        createTableRow(link,place)
-    }
-}
-
-function createTableRow(link,place) {
-    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place.place_id + '">';
+function createTableRow(link,place_details) {
+    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place_details.place.place_id + '">';
 
     // Create a unique ID for the checkbox (optional)
-    var checkboxId = 'checkbox_' + place.place_id.replace(/ /g, '_');
+    var checkboxId = 'checkbox_' + place_details.place.place_id.replace(/ /g, '_');
 
     if(clerk.user) {
-        if (userwineries.includes(place.place_id )) {
+        if (userwineries.includes(place_details.place.place_id )) {
             //console.log('Array contains place_id');
             visited="checked"
         } else {
@@ -392,7 +388,7 @@ function createTableRow(link,place) {
         visited=""
     }
 
-    checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place.place_id}" ${visited}>`;
+    checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
 
     dataTable.row.add([checkboxHTML, link]).draw();
 
@@ -401,7 +397,7 @@ function createTableRow(link,place) {
         $(`#${checkboxId}`).on('change', function() {
             var isChecked = $(this).is(':checked');
 
-            saveWinery(place, isChecked);
+            saveWinery(place_details, isChecked);
         });
     }
     else {
@@ -414,14 +410,14 @@ function createTableRow(link,place) {
     }
 }
 
-function saveWinery(place, state) {
-    console.log("saveWinery: " + place);
+function saveWinery(place_details, state) {
+    console.log("saveWinery: " + place_details.place.place_id);
 
     $.ajax({
         type: 'POST', 
         url: '/saveWinery',
         data: {
-            place_id: place.place_id,
+            place_id: place_details.place.place_id,
             checkbox_state: state,
             user: clerk.user.id
         },
@@ -429,7 +425,7 @@ function saveWinery(place, state) {
             console.log('Flask route response:', response);
             
             processUserWineries();
-            updatePin(place)
+            updatePin(place_details)
         },
         error: function(error) {
             console.error('Error:', error);
@@ -437,12 +433,12 @@ function saveWinery(place, state) {
     });
 }
 
-function fetchPlaceWebsite(placeId, callback) {
-    fetch(`/get-place-website?place_id=${placeId}`)
+function fetchPlaceDetails(placeId, callback) {
+    fetch(`/get-place-details?place_id=${placeId}`)
         .then(response => response.json())
         .then(data => {
-            if (data.website) {
-                callback(data.website); // Call the callback with the website URL
+            if (data.details) {
+                callback(data.details); // Call the callback with the website URL
             } else {
                 console.error('Error:', data.error);
                 callback('N/A'); // Handle the case where there is no website URL

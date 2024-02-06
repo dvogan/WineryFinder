@@ -3,6 +3,8 @@ import requests
 
 import os
 
+import json
+
 #print(os.environ)
 
 googleApiKey = os.environ.get('GOOGLE_API_KEY')
@@ -31,13 +33,13 @@ def proxy_google_maps():
     response = requests.get(url)
     return response.content, response.status_code
 
-@app.route('/get-place-website', methods=['GET'])
-def get_place_website():
+@app.route('/get-place-details', methods=['GET'])
+def get_place_details():
     place_id = request.args.get('place_id')
     api_key = googleApiKey
 
-    sql = f"select url from wineries where placeid='{place_id}'"
-    #print(sql)
+    sql = f"select details from wineries where placeid='{place_id}'"
+    print(sql)
     global conn
     if conn.closed:
         conn=psycopg2.connect(os.environ.get('WINE_DATABASE_URL'))
@@ -50,25 +52,39 @@ def get_place_website():
     #print(row)
 
     if row is not None:
-        website=row[0]
-        return jsonify(website=website)
-    else:
-        print("RETRIEVE WEBSITE URL FROM GOOGLE!!")
+        print("RETRIEVE PLACE DETAILS FROM DATABASE!!")
 
-        url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=website&key={api_key}"
+        details=row[0]
+
+        #print(details)
+
+        return jsonify(details=details)
+    else:
+        print("RETRIEVE PLACE DETAILS FROM GOOGLE!!")
+
+        url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=website,formatted_phone_number,opening_hours&key={api_key}"
         response = requests.get(url)
         data = response.json()
 
         if data['status'] == 'OK':
             try:
-                website=data['result']['website']
+                #print(data['result'])
 
-                sql=f"insert into wineries values ('{place_id}','{website}')"
+                #website=data['result']['website']
+
+                json_string = json.dumps(data['result'])
+
+                print(json_string)
+
+                sql=f"insert into wineries (placeid, details) values (%s,%s)"
                 #print(sql)
-                cursor.execute(sql)
+
+                values=(place_id,json_string)
+
+                cursor.execute(sql,values)
                 conn.commit()
 
-                return jsonify(website=website)
+                return jsonify(details=json_string)
             except Exception as e:
                 print(f"An error occurred: {e}")
 

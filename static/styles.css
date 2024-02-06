@@ -69,6 +69,10 @@ body {
     width: 300px;
 }
 
+.directions {
+    font-size: large;
+}
+
 #auth_link {
     margin-left: auto;
     color: white;
@@ -78,6 +82,10 @@ body {
 #myWineriesLink {
     margin-left: auto;
     color: white;
+}
+
+.infoWindowTitle {
+    font-size: x-large;
 }
 
 
