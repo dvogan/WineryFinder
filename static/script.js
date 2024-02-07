@@ -3,6 +3,7 @@ var wineryService;
 var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
 let userwineries;
+var rawResults=[]
 var placesDetails=[];
 var currentInfowindow = null;
 var extendedBounds;
@@ -224,10 +225,54 @@ function searchForWineries() {
     // Extend the bounds
     //extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
 
-    searchAndProcess('winery', currentBounds);
-    searchAndProcess('vineyard', currentBounds);
+    //searchAndProcess('winery', currentBounds);
+    //searchAndProcess('vineyard', currentBounds);
 
-   
+    searchArea(["winery", "vineyard"], currentBounds, function (error, results) {
+        if (error) {
+            console.error("Error:", error);
+        } else {
+            console.log(results);
+            processSearchResults(results)
+        }
+    });
+}
+
+/*
+function searchArea(keyword,bounds, callback) {
+    var request = {
+        bounds: bounds,
+        keyword: keyword,
+    };
+
+    wineryService.nearbySearch(request, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            console.log(results)
+            callback(null, results);
+        } else {
+            console.log("Search for " + keyword + " failed: " + status);
+        }
+    });
+}
+*/
+
+function searchArea(keywords, bounds, callback) {
+    var request = {
+        query: keywords.join(' OR '),
+    };
+
+    wineryService.textSearch(request, function (results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            // Filter results based on bounds
+            var filteredResults = results.filter(function (result) {
+                return bounds.contains(result.geometry.location);
+            });
+
+            callback(null, filteredResults);
+        } else {
+            console.log("Search for " + keywords.join(' OR ') + " failed: " + status);
+        }
+    });
 }
 
 var allPlaces = {}; // Object to store unique places
@@ -242,48 +287,33 @@ function processSearchResults(results) {
     });
 }
 
-function searchAndProcess(keyword,bounds) {
-    var request = {
-        bounds: bounds,
-        keyword: keyword,
-    };
 
-    wineryService.nearbySearch(request, function (results, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-            processSearchResults(results);
-        } else {
-            console.log("Search for " + keyword + " failed: " + status);
-        }
-    });
-}
 
 function processPlace(place) {
-    let place_details = placesDetails.find(obj => obj.place && obj.place.place_id === place.place_id);
+    //console.log("processPlace")
+    //alreadyProcessed=placesDetails.some(obj => obj.place_id === place.place_id);
 
-    if(!place_details) {
-        console.log(place.place_id + " not found, fetching");
+    
+
+    //if(!alreadyProcessed) {
+        //console.log(place.place_id + " not found, fetching");
 
         fetchPlaceDetails(place.place_id, function (details) {
             place_details={"place_id":place.place_id,"details":details,"place":place}
 
             //console.log("--")
-            console.log(place_details)
+            //console.log(place.place_id)
             //console.log("--")
 
             placesDetails.push(place_details)
-            console.log(placesDetails.length) 
 
             displayPlace(place_details)
         });
-    }
-    else {
-        //console.log(place.place_id + " was found, no need to fetch");
-
-        displayPlace(place_details)
-    }
+    //}
 }
 
 function displayPlace(place_details) {
+    //console.log("displayPlace");
     var link='';
 
     //console.log(place_details)
@@ -344,9 +374,17 @@ function displayPlace(place_details) {
 
     //console.log(dirLink)
 
+    var hours="";
+    try {
+        hours=place_details.details.opening_hours.weekday_text.join('<br>')
+    }
+    catch(ex) {
+
+    }
+
    var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + link + '</h4></div>';
    contentString += '<p>' + dirLink + '</p>'
-   contentString += '<p class="directions">' + place_details.details.opening_hours.weekday_text.join('<br>'); + '</p>'
+   contentString += '<p class="hours">' + hours + '</p>'
 
 
     var infoWindow = new google.maps.InfoWindow();
