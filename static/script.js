@@ -225,10 +225,9 @@ function searchForWineries() {
     // Extend the bounds
     //extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
 
-    //searchAndProcess('winery', currentBounds);
-    //searchAndProcess('vineyard', currentBounds);
 
-    searchArea(["winery", "vineyard"], currentBounds, function (error, results) {
+    /*
+    searchArea("meadery", currentBounds, function (error, results) {
         if (error) {
             console.error("Error:", error);
         } else {
@@ -236,44 +235,74 @@ function searchForWineries() {
             processSearchResults(results)
         }
     });
-}
+    */
 
-/*
-function searchArea(keyword,bounds, callback) {
-    var request = {
-        bounds: bounds,
-        keyword: keyword,
-    };
+    function searchArea(keyword,bounds, callback) {
+        var request = {
+            bounds: bounds,
+            keyword: keyword,
+        };
+    
+        wineryService.nearbySearch(request, function (results, status) {
+            if (status === google.maps.places.PlacesServiceStatus.OK) {
+                console.log(results)
+                callback(null, results);
+            } else {
+                console.log("Search for " + keyword + " failed: " + status);
+            }
+        });
+    }
 
-    wineryService.nearbySearch(request, function (results, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-            console.log(results)
-            callback(null, results);
-        } else {
-            console.log("Search for " + keyword + " failed: " + status);
-        }
-    });
-}
-*/
+    ////////////////////////
+var keywords = ['winery', 'vineyard', 'meadery'];
+var bounds = currentBounds; // replace with your actual bounds object
 
-function searchArea(keywords, bounds, callback) {
-    var request = {
-        query: keywords.join(' OR '),
-    };
+async function searchAndFilter() {
+    var allResults = [];
 
-    wineryService.textSearch(request, function (results, status) {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-            // Filter results based on bounds
-            var filteredResults = results.filter(function (result) {
-                return bounds.contains(result.geometry.location);
+    for (const currentKeyword of keywords) {
+        try {
+            const results = await new Promise((resolve, reject) => {
+                searchArea(currentKeyword, bounds, function (error, results) {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(results);
+                    }
+                });
             });
 
-            callback(null, filteredResults);
-        } else {
-            console.log("Search for " + keywords.join(' OR ') + " failed: " + status);
+            // Filter out duplicates
+            results.forEach(function (result) {
+                if (!allResults.some(existingResult => existingResult.place_id === result.place_id)) {
+                    allResults.push(result);
+                }
+            });
+        } catch (error) {
+            console.log('Error:', error);
         }
-    });
+    }
+
+    //console.log('All results:', allResults);
+
+    return allResults;
 }
+
+searchAndFilter().then((allResults) => {
+    // Access allResults here
+    console.log('All results:', allResults);
+    processSearchResults(allResults)
+});
+
+////////////////////////
+
+}
+
+
+
+/*
+
+*/
 
 var allPlaces = {}; // Object to store unique places
 
