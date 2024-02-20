@@ -30,8 +30,11 @@
                     <table id="wineryTable">
                         <thead>
                             <tr>
-                                <th>Visited?</th>
                                 <th>Name</th>
+                                <th>Visited</th>
+                                <th>Favorite</th>
+                                <th>Wishlist</th>
+                                <th>Rate</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -45,7 +48,8 @@
             
         </footer>
     </div>
-    <script src="/proxy-google-maps?callback=initMap&libraries=places" async defer></script>
+    <script src="/proxy-google-maps?callback=initMap&libraries=places" defer></script>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 

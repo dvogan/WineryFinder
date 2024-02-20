@@ -143,16 +143,18 @@ def get_user_wineries():
     cursor = conn.cursor()
     cursor.execute(sql)
 
-    # Loop through the cursor results and build the list of dictionaries
-    for row in cursor:
-        #print(row)
-        user_wineries.append(row[1])
+    rows = cursor.fetchall()
 
-    #print(user_wineries)
+    # Get the column names from the cursor description
+    columns = [column[0] for column in cursor.description]
 
-    # Return the wineries as JSON response
-    return jsonify(wineries=user_wineries)
-    return jsonify(response_data)
+    # Create a list of dictionaries where each dictionary represents a row
+    result = [dict(zip(columns, row)) for row in rows]
+
+    # Convert the result to a JSON array
+    json_array = json.dumps(result, indent=2)
+
+    return json_array
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -88,7 +88,10 @@ function getUserWineries() {
 async function processUserWineries() {
     try {
         let data = await getUserWineries();
-        userwineries = data.wineries;
+
+        console.log(data)
+
+        userwineries = data;
         console.log('User Wineries:', userwineries);
     } catch (error) {
         console.error('Error while processing user wineries:', error);
@@ -104,7 +107,7 @@ async function updatePin(place_details) {
             if(marker.place_id == place_details.place.place_id) {
                console.log("found marker");
                marker.setMap(null);
-               createWineryMarker(place_details)
+               //createWineryMarker(place_details)
             }
         });
 
@@ -125,7 +128,6 @@ function initMap() {
         },
    });
 
-   
    wineryService = new google.maps.places.PlacesService(map);
 
    dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
@@ -134,8 +136,11 @@ function initMap() {
         "ordering": true, // Enable sorting
         "info": true, // Show table information
         columnDefs: [
-            { targets: [0], width: '10%' }, 
-            { targets: [1], width: '90%' }, 
+            { targets: [0], width: '40%' }, 
+            { targets: [1], width: '15%' }, 
+            { targets: [2], width: '15%' }, 
+            { targets: [3], width: '15%' }, 
+            { targets: [4], width: '15%' }, 
         ]
     });
     dataTable.clear().draw();
@@ -213,8 +218,6 @@ function searchForWineries() {
    });
    wineryMarkers = [];
 
-   
-
     // Get the current bounds
     var currentBounds = map.getBounds();
 
@@ -254,55 +257,48 @@ function searchForWineries() {
     }
 
     ////////////////////////
-var keywords = ['winery', 'vineyard', 'meadery'];
-var bounds = currentBounds; // replace with your actual bounds object
+    var keywords = ['winery', 'vineyard', 'meadery'];
+    var bounds = currentBounds; // replace with your actual bounds object
 
-async function searchAndFilter() {
-    var allResults = [];
+    async function searchAndFilter() {
+        var allResults = [];
 
-    for (const currentKeyword of keywords) {
-        try {
-            const results = await new Promise((resolve, reject) => {
-                searchArea(currentKeyword, bounds, function (error, results) {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(results);
+        for (const currentKeyword of keywords) {
+            try {
+                const results = await new Promise((resolve, reject) => {
+                    searchArea(currentKeyword, bounds, function (error, results) {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(results);
+                        }
+                    });
+                });
+
+                // Filter out duplicates
+                results.forEach(function (result) {
+                    if (!allResults.some(existingResult => existingResult.place_id === result.place_id)) {
+                        allResults.push(result);
                     }
                 });
-            });
-
-            // Filter out duplicates
-            results.forEach(function (result) {
-                if (!allResults.some(existingResult => existingResult.place_id === result.place_id)) {
-                    allResults.push(result);
-                }
-            });
-        } catch (error) {
-            console.log('Error:', error);
+            } catch (error) {
+                console.log('Error:', error);
+            }
         }
+
+        //console.log('All results:', allResults);
+
+        return allResults;
     }
 
-    //console.log('All results:', allResults);
+    searchAndFilter().then((allResults) => {
+        // Access allResults here
+        console.log('All results:', allResults);
+        processSearchResults(allResults)
+    });
 
-    return allResults;
-}
-
-searchAndFilter().then((allResults) => {
-    // Access allResults here
-    console.log('All results:', allResults);
-    processSearchResults(allResults)
-});
-
-////////////////////////
 
 }
-
-
-
-/*
-
-*/
 
 var allPlaces = {}; // Object to store unique places
 
@@ -319,26 +315,13 @@ function processSearchResults(results) {
 
 
 function processPlace(place) {
-    //console.log("processPlace")
-    //alreadyProcessed=placesDetails.some(obj => obj.place_id === place.place_id);
+    fetchPlaceDetails(place.place_id, function (details) {
+        place_details={"place_id":place.place_id,"details":details,"place":place}
 
-    
+        placesDetails.push(place_details)
 
-    //if(!alreadyProcessed) {
-        //console.log(place.place_id + " not found, fetching");
-
-        fetchPlaceDetails(place.place_id, function (details) {
-            place_details={"place_id":place.place_id,"details":details,"place":place}
-
-            //console.log("--")
-            //console.log(place.place_id)
-            //console.log("--")
-
-            placesDetails.push(place_details)
-
-            displayPlace(place_details)
-        });
-    //}
+        displayPlace(place_details)
+    });
 }
 
 function displayPlace(place_details) {
@@ -437,38 +420,55 @@ function displayPlace(place_details) {
 }
 
 function createTableRow(link,place_details) {
-    var checkboxHTML = '<input type="checkbox" name="placeCheckbox" value="' + place_details.place.place_id + '">';
+    var encodedID=place_details.place.place_id.replace(/ /g, '_');
 
-    // Create a unique ID for the checkbox (optional)
-    var checkboxId = 'checkbox_' + place_details.place.place_id.replace(/ /g, '_');
+    var visited_checkboxId = 'visited_checkbox_' + encodedID;
+    var favorited_checkboxId = 'favorited_checkbox_' + encodedID;
+    var wishlist_checkboxId = 'wishlist_checkbox_' + encodedID;
+
+    visited=""
+    favorited=""
+    wishlist=""
 
     if(clerk.user) {
-        if (userwineries.includes(place_details.place.place_id )) {
-            //console.log('Array contains place_id');
-            visited="checked"
-        } else {
-            //console.log('Array does not contain place_id');
-            visited=""
+        const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
+
+        console.log(userplace)
+
+        if(userplace) {
+            if (userplace.visited) {
+                visited="checked"
+            }
+
+            if (userplace.favorite) {
+                favorited="checked"
+            }
+
+            if(userplace.wishlist) {
+                wishlist="checked"
+            }
+        }
+        else {
+            console.log("no user data for this place")
         }
     }
-    else {
-        visited=""
-    }
+    
+    visited_checkboxHTML = `<input type="checkbox" name="visited_placeCheckbox" id="${visited_checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
+    favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
+    wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
-    checkboxHTML = `<input type="checkbox" name="placeCheckbox" id="${checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
-
-    dataTable.row.add([checkboxHTML, link]).draw();
+    dataTable.row.add([link,visited_checkboxHTML, favorited_checkboxHTML,wishlist_checkboxHTML,"rate..."]).draw();
 
     //console.log(clerk.user);
     if(clerk.user) {
-        $(`#${checkboxId}`).on('change', function() {
+        $(`#${visited_checkboxId}`).on('change', function() {
             var isChecked = $(this).is(':checked');
 
             saveWinery(place_details, isChecked);
         });
     }
     else {
-        $(`#${checkboxId}`).on('click', function() {
+        $(`#${visited_checkboxId}`).on('click', function() {
             event.preventDefault();
 
             // Call the alert function
