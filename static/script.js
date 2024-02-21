@@ -32,8 +32,7 @@ function printScreenSize() {
 window.addEventListener('load', async function () {
     clerk = window.Clerk;
 
-    console.log("clerk.user")
-    console.log(clerk.user)
+    console.log("clerk.user: " + clerk.user)
 
     var auth_link = document.getElementById('auth_link');
     var myWineriesLink = this.document.getElementById('myWineriesLink')
@@ -421,25 +420,27 @@ function createTableRow(link, place_details) {
     wishlist = ""
 
     if (clerk.user) {
-        const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
+        if (userwineries) {
+            const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
 
-        console.log(userplace)
+            console.log(userplace)
 
-        if (userplace) {
-            if (userplace.visited) {
-                visited = "checked"
+            if (userplace) {
+                if (userplace.visited) {
+                    visited = "checked"
+                }
+
+                if (userplace.favorite) {
+                    favorited = "checked"
+                }
+
+                if (userplace.wishlist) {
+                    wishlist = "checked"
+                }
             }
-
-            if (userplace.favorite) {
-                favorited = "checked"
+            else {
+                console.log("no user data for this place")
             }
-
-            if (userplace.wishlist) {
-                wishlist = "checked"
-            }
-        }
-        else {
-            console.log("no user data for this place")
         }
     }
 
