@@ -166,7 +166,7 @@ async function initMap() {
 
     // Add an event listener for map dragging (panning)
     map.addListener('dragend', function () {
-        logCoordinates();
+        //logCoordinates();
         searchForWineries();
     });
 
