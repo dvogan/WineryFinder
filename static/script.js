@@ -1,15 +1,16 @@
-var map;
 var wineryService;
 var wineryMarkers = [];
 var defaultLocation; // Will be set to the user's location
 let userwineries;
-var rawResults=[]
-var placesDetails=[];
+var rawResults = []
+var placesDetails = [];
 var currentInfowindow = null;
 var extendedBounds;
 var clerk;
 
-  // Global definition of CustomInfoWindow
+console.log("key:" + googleMapsApiKey)
+
+// Global definition of CustomInfoWindow
 function CustomInfoWindow() {
     google.maps.InfoWindow.call(this);
     // Additional customization
@@ -26,38 +27,38 @@ function printScreenSize() {
 
 // Event listener for window resize/orientation change
 //window.addEventListener('resize', printScreenSize);
-  
+
 // Adds listener to initialize ClerkJS after it's loaded
 window.addEventListener('load', async function () {
     clerk = window.Clerk;
-    
+
     console.log("clerk.user")
     console.log(clerk.user)
 
-    var auth_link = document.getElementById('auth_link');  
+    var auth_link = document.getElementById('auth_link');
     var myWineriesLink = this.document.getElementById('myWineriesLink')
 
-    if(clerk.user) {
+    if (clerk.user) {
         processUserWineries();
 
         window.Clerk.mountUserButton(auth_link, {
             appearance: {
-              baseTheme: 'dark'
+                baseTheme: 'dark'
             },
             afterSignOutUrl: "/"
         });
-        auth_link.textContent= "";
+        auth_link.textContent = "";
     }
     else {
-        auth_link.addEventListener('click', function(event) {
+        auth_link.addEventListener('click', function (event) {
             // Prevent default action of the link
             event.preventDefault();
 
             window.Clerk.openSignIn(auth_link, {
                 appearance: {
-                  baseTheme: 'dark'
+                    baseTheme: 'dark'
                 }
-              });
+            });
         });
 
         myWineriesLink.style.display = 'none';
@@ -73,16 +74,16 @@ function getUserWineries() {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
-    .then(data => {
-        // Return data for further processing if needed
-        return data;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        // It's important to re-throw the error so it can be caught by the caller
-        throw error;
-    });
+        .then(response => response.json())
+        .then(data => {
+            // Return data for further processing if needed
+            return data;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // It's important to re-throw the error so it can be caught by the caller
+            throw error;
+        });
 }
 
 async function processUserWineries() {
@@ -100,14 +101,14 @@ async function processUserWineries() {
 
 async function updatePin(place_details) {
     try {
-       console.log("look for marker")
+        console.log("look for marker")
 
         wineryMarkers.forEach(function (marker) {
             console.log(marker);
-            if(marker.place_id == place_details.place.place_id) {
-               console.log("found marker");
-               marker.setMap(null);
-               //createWineryMarker(place_details)
+            if (marker.place_id == place_details.place.place_id) {
+                console.log("found marker");
+                marker.setMap(null);
+                //createWineryMarker(place_details)
             }
         });
 
@@ -116,70 +117,61 @@ async function updatePin(place_details) {
     }
 }
 
-
-function initMap() {
-   map = new google.maps.Map(document.getElementById('map'), {
-       center: defaultLocation, // Default location (initially undefined)
-       zoom: 10, // Adjust the initial zoom level,
-       mapTypeControl: true, // Enable map type control
+let map;
+// initMap is now async
+async function initMap() {
+    // Request libraries when needed, not in the script tag.
+    const { Map } = await google.maps.importLibrary("maps");
+    const { Places } = await google.maps.importLibrary("places");
+    // Short namespaces can be used.
+    map = new Map(document.getElementById("map"), {
+        center: defaultLocation, // Default location (initially undefined)
+        zoom: 10, // Adjust the initial zoom level,
+        mapTypeControl: true, // Enable map type control
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT, // Use default style for map type control
             mapTypeIds: [google.maps.MapTypeId.ROADMAP], // Only allow the roadmap type
         },
-   });
-
-   wineryService = new google.maps.places.PlacesService(map);
-
-   dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
-        "paging": true, // Enable paging
-        "searching": true, // Enable searching
-        "ordering": true, // Enable sorting
-        "info": true, // Show table information
-        columnDefs: [
-            { targets: [0], width: '40%' }, 
-            { targets: [1], width: '15%' }, 
-            { targets: [2], width: '15%' }, 
-            { targets: [3], width: '15%' }, 
-            { targets: [4], width: '15%' }, 
-        ]
     });
-    dataTable.clear().draw();
 
-   console.log(navigator.geolocation)
+    wineryService = new google.maps.places.PlacesService(map);
 
-   // Check if geolocation is available in the user's browser
-   if (navigator.geolocation) {
-       // Get the user's current location
-       navigator.geolocation.getCurrentPosition(function (position) {
-           var userLocation = {
-               lat: position.coords.latitude,
-               lng: position.coords.longitude,
-           };
-           defaultLocation = userLocation; // Set the defaultLocation to the user's location
-           map.setCenter(defaultLocation); // Set the map center to the user's location
-           searchForWineries(); // Perform initial search
-       }, function () {
+
+    console.log(navigator.geolocation)
+
+    // Check if geolocation is available in the user's browser
+    if (navigator.geolocation) {
+        // Get the user's current location
+        navigator.geolocation.getCurrentPosition(function (position) {
+            var userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+            };
+            defaultLocation = userLocation; // Set the defaultLocation to the user's location
+            map.setCenter(defaultLocation); // Set the map center to the user's location
+            searchForWineries(); // Perform initial search
+        }, function () {
             console.log("geolocation failed");
-           // Handle errors if geolocation fails
-           defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
-           map.setCenter(defaultLocation); // Set the map center to the default location
-           searchForWineries(); // Perform initial search
-       });
-   } else {
+            // Handle errors if geolocation fails
+            defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
+            map.setCenter(defaultLocation); // Set the map center to the default location
+            searchForWineries(); // Perform initial search
+        });
+    } else {
         console.log("geolocation not available");
-       // Geolocation is not available, use the default location
-       defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
-       map.setCenter(defaultLocation); // Set the map center to the default location
-       searchForWineries(); // Perform initial search
-   }
+        // Geolocation is not available, use the default location
+        defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
+        map.setCenter(defaultLocation); // Set the map center to the default location
+        searchForWineries(); // Perform initial search
+    }
 
-   // Add an event listener for map dragging (panning)
-   map.addListener('dragend', function () {
-       logCoordinates();
-       searchForWineries();
-   });
+    // Add an event listener for map dragging (panning)
+    map.addListener('dragend', function () {
+        logCoordinates();
+        searchForWineries();
+    });
 
-   map.addListener('zoom_changed', function () {
+    map.addListener('zoom_changed', function () {
         // Handle zoom change here
         var zoomLevel = map.getZoom();
         console.log('Zoom Level:', zoomLevel);
@@ -189,34 +181,32 @@ function initMap() {
     });
 }
 
-function logCoordinates() {
-   var center = map.getCenter();
-   console.log('Map Center Coordinates: Lat ' + center.lat() + ', Lng ' + center.lng());
-}
+initMap();
 
-function extendBounds(bounds, paddingLat, paddingLng) {
-    // Northeast corner
-    var ne = bounds.getNorthEast();
-    var extendedNE = new google.maps.LatLng(ne.lat() + paddingLat, ne.lng() + paddingLng);
-
-    // Southwest corner
-    var sw = bounds.getSouthWest();
-    var extendedSW = new google.maps.LatLng(sw.lat() - paddingLat, sw.lng() - paddingLng);
-
-    // Create new extended bounds
-    var extendedBounds = new google.maps.LatLngBounds(extendedSW, extendedNE);
-    return extendedBounds;
-}
+dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
+    "paging": true, // Enable paging
+    "searching": true, // Enable searching
+    "ordering": true, // Enable sorting
+    "info": true, // Show table information
+    columnDefs: [
+        { targets: [0], width: '40%' },
+        { targets: [1], width: '15%' },
+        { targets: [2], width: '15%' },
+        { targets: [3], width: '15%' },
+        { targets: [4], width: '15%' },
+    ]
+});
+dataTable.clear().draw();
 
 function searchForWineries() {
 
     dataTable.clear().draw();
 
-   // Clear existing winery markers
-   wineryMarkers.forEach(function (marker) {
-       marker.setMap(null);
-   });
-   wineryMarkers = [];
+    // Clear existing winery markers
+    wineryMarkers.forEach(function (marker) {
+        marker.setMap(null);
+    });
+    wineryMarkers = [];
 
     // Get the current bounds
     var currentBounds = map.getBounds();
@@ -240,12 +230,12 @@ function searchForWineries() {
     });
     */
 
-    function searchArea(keyword,bounds, callback) {
+    function searchArea(keyword, bounds, callback) {
         var request = {
             bounds: bounds,
             keyword: keyword,
         };
-    
+
         wineryService.nearbySearch(request, function (results, status) {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
                 console.log(results)
@@ -306,8 +296,8 @@ function processSearchResults(results) {
     results.forEach(function (place) {
         //console.log(place.types)
         //console.log(allPlaces);
-        if(place.types.includes('food')) {
-            processPlace(place); 
+        if (place.types.includes('food')) {
+            processPlace(place);
         }
     });
 }
@@ -316,7 +306,7 @@ function processSearchResults(results) {
 
 function processPlace(place) {
     fetchPlaceDetails(place.place_id, function (details) {
-        place_details={"place_id":place.place_id,"details":details,"place":place}
+        place_details = { "place_id": place.place_id, "details": details, "place": place }
 
         placesDetails.push(place_details)
 
@@ -326,42 +316,42 @@ function processPlace(place) {
 
 function displayPlace(place_details) {
     //console.log("displayPlace");
-    var link='';
+    var link = '';
 
     //console.log(place_details)
 
-    if(place_details.details.website) {
-        link="<a href='" + place_details.details.website + "' target='_blank'>" + place_details.place.name + "<a/>"
+    if (place_details.details.website) {
+        link = "<a href='" + place_details.details.website + "' target='_blank'>" + place_details.place.name + "<a/>"
     }
     else {
-        link=place_details.place.name
+        link = place_details.place.name
     }
 
-    createTableRow(link,place_details)
+    createTableRow(link, place_details)
 
     var pinColor;
 
-    if(userwineries) {
-        if (userwineries.includes(place_details.place.place_id )) {
-            pinColor="#32cd32"
+    if (userwineries) {
+        if (userwineries.includes(place_details.place.place_id)) {
+            pinColor = "#32cd32"
         } else {
-            pinColor="#ff0000"
+            pinColor = "#ff0000"
         }
     }
     else {
-        pinColor="#ff0000"
+        pinColor = "#ff0000"
     }
 
     //console.log(pinColor)
-    
+
     var pinLabel = "A";
     var pinSVGHole = "M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z";
-    var labelOriginHole = new google.maps.Point (12,15);
+    var labelOriginHole = new google.maps.Point(12, 15);
     var pinSVGFilled = "M 12,2 C 8.1340068,2 5,5.1340068 5,9 c 0,5.25 7,13 7,13 0,0 7,-7.75 7,-13 0,-3.8659932 -3.134007,-7 -7,-7 z";
-    var labelOriginFilled = new google.maps.Point (12,9);
+    var labelOriginFilled = new google.maps.Point(12, 9);
     var markerImage = {
         path: pinSVGFilled,
-        anchor: new google.maps.Point (12,17),
+        anchor: new google.maps.Point(12, 17),
         fillOpacity: 1,
         fillColor: pinColor,
         strokeWeight: 2,
@@ -370,7 +360,7 @@ function displayPlace(place_details) {
         labelOrigin: labelOriginFilled
     };
 
-    marker = new google.maps.Marker ( {
+    marker = new google.maps.Marker({
         map: map,
         position: place_details.place.geometry.location,
         icon: markerImage,
@@ -378,33 +368,33 @@ function displayPlace(place_details) {
         place_id: place_details.place.place_id
     });
 
-    lat=place_details.place.geometry.location.lat()
-    lng=place_details.place.geometry.location.lng()
+    lat = place_details.place.geometry.location.lat()
+    lng = place_details.place.geometry.location.lng()
 
-    dirURL=`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    dirLink=`<a href='${dirURL}' target='_blank'><img class='navIcon' src='/static/maps-icon-16.png'></a>`;
+    dirURL = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    dirLink = `<a href='${dirURL}' target='_blank'><img class='navIcon' src='/static/maps-icon-16.png'></a>`;
 
     //console.log(dirLink)
 
-    var hours="";
+    var hours = "";
     try {
-        hours=place_details.details.opening_hours.weekday_text.join('<br>')
+        hours = place_details.details.opening_hours.weekday_text.join('<br>')
     }
-    catch(ex) {
+    catch (ex) {
 
     }
 
-   var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + link + '</h4></div>';
-   contentString += '<p>' + dirLink + '</p>'
-   contentString += '<p class="hours">' + hours + '</p>'
+    var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + link + '</h4></div>';
+    contentString += '<p>' + dirLink + '</p>'
+    contentString += '<p class="hours">' + hours + '</p>'
 
 
     var infoWindow = new google.maps.InfoWindow();
     infoWindow.setContent(contentString);
 
-   
 
-   marker.addListener('click', function () {
+
+    marker.addListener('click', function () {
         // Close the current InfoWindow if it's open
         if (currentInfowindow) {
             currentInfowindow.close();
@@ -413,62 +403,62 @@ function displayPlace(place_details) {
         infoWindow.setPosition(marker.getPosition());
         infoWindow.setMap(map);
 
-       currentInfowindow = infoWindow;
-   });
+        currentInfowindow = infoWindow;
+    });
 
-   wineryMarkers.push(marker);
+    wineryMarkers.push(marker);
 }
 
-function createTableRow(link,place_details) {
-    var encodedID=place_details.place.place_id.replace(/ /g, '_');
+function createTableRow(link, place_details) {
+    var encodedID = place_details.place.place_id.replace(/ /g, '_');
 
     var visited_checkboxId = 'visited_checkbox_' + encodedID;
     var favorited_checkboxId = 'favorited_checkbox_' + encodedID;
     var wishlist_checkboxId = 'wishlist_checkbox_' + encodedID;
 
-    visited=""
-    favorited=""
-    wishlist=""
+    visited = ""
+    favorited = ""
+    wishlist = ""
 
-    if(clerk.user) {
+    if (clerk.user) {
         const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
 
         console.log(userplace)
 
-        if(userplace) {
+        if (userplace) {
             if (userplace.visited) {
-                visited="checked"
+                visited = "checked"
             }
 
             if (userplace.favorite) {
-                favorited="checked"
+                favorited = "checked"
             }
 
-            if(userplace.wishlist) {
-                wishlist="checked"
+            if (userplace.wishlist) {
+                wishlist = "checked"
             }
         }
         else {
             console.log("no user data for this place")
         }
     }
-    
+
     visited_checkboxHTML = `<input type="checkbox" name="visited_placeCheckbox" id="${visited_checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
     favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
     wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
-    dataTable.row.add([link,visited_checkboxHTML, favorited_checkboxHTML,wishlist_checkboxHTML,"rate..."]).draw();
+    dataTable.row.add([link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML, "rate..."]).draw();
 
     //console.log(clerk.user);
-    if(clerk.user) {
-        $(`#${visited_checkboxId}`).on('change', function() {
+    if (clerk.user) {
+        $(`#${visited_checkboxId}`).on('change', function () {
             var isChecked = $(this).is(':checked');
 
             saveWinery(place_details, isChecked);
         });
     }
     else {
-        $(`#${visited_checkboxId}`).on('click', function() {
+        $(`#${visited_checkboxId}`).on('click', function () {
             event.preventDefault();
 
             // Call the alert function
@@ -481,20 +471,20 @@ function saveWinery(place_details, state) {
     console.log("saveWinery: " + place_details.place.place_id);
 
     $.ajax({
-        type: 'POST', 
+        type: 'POST',
         url: '/saveWinery',
         data: {
             place_id: place_details.place.place_id,
             checkbox_state: state,
             user: clerk.user.id
         },
-        success: function(response) {
+        success: function (response) {
             console.log('Flask route response:', response);
-            
+
             processUserWineries();
             updatePin(place_details)
         },
-        error: function(error) {
+        error: function (error) {
             console.error('Error:', error);
         }
     });
