@@ -175,7 +175,7 @@ async function initMap() {
         var zoomLevel = map.getZoom();
         console.log('Zoom Level:', zoomLevel);
 
-        logCoordinates();
+        //logCoordinates();
         searchForWineries();
     });
 }
