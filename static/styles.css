@@ -116,6 +116,7 @@ body {
     height: 50%; /* Each takes half the height in portrait mode */
 }
 
+
 /* Media query for landscape orientation */
 @media screen and (min-width: 810px) and (orientation: portrait) {
     #content {
