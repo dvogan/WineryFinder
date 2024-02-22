@@ -159,16 +159,6 @@ html, body {
     flex-direction: column;
 }
 
-#footer {
-    /* Footer styling */
-    background-color: #494277;
-    color: white;
-    text-align: center;
-    padding: 10px 0;
-    max-height: 5vh;
-    min-height: 5vh;
-}
-
 .dropdown {
     position: relative;
     display: inline-block;
