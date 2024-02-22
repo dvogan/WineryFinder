@@ -199,6 +199,7 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
         { targets: [4], width: '15%' },
     ]
 });
+
 dataTable.clear().draw();
 
 function searchForWineries() {
