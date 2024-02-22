@@ -189,6 +189,8 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
     "searching": true, // Enable searching
     "ordering": true, // Enable sorting
     "info": true, // Show table information
+    "pageLength": 5,
+    "lengthChange": false, 
     columnDefs: [
         { targets: [0], width: '40%' },
         { targets: [1], width: '15%' },
