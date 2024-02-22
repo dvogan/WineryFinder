@@ -127,6 +127,7 @@ async function initMap() {
         center: defaultLocation, // Default location (initially undefined)
         zoom: 10, // Adjust the initial zoom level,
         mapTypeControl: true, // Enable map type control
+        gestureHandling: 'cooperative',
         mapTypeControlOptions: {
             style: google.maps.MapTypeControlStyle.DEFAULT, // Use default style for map type control
             mapTypeIds: [google.maps.MapTypeId.ROADMAP], // Only allow the roadmap type

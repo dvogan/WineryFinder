@@ -25,6 +25,10 @@ body {
     padding-right: 10px;
 }
 
+#map {
+    touch-action: manipulation;
+}
+
 .navIcon {
     width:32px;
     height: 32px;
