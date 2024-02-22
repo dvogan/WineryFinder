@@ -168,13 +168,14 @@ async function initMap() {
     // Add an event listener for map dragging (panning)
     map.addListener('dragend', function () {
         //logCoordinates();
+        console.log('dragend');
         searchForWineries();
     });
 
     map.addListener('zoom_changed', function () {
         // Handle zoom change here
         var zoomLevel = map.getZoom();
-        console.log('Zoom Level:', zoomLevel);
+        console.log('zoom_changed - Level:', zoomLevel);
 
         //logCoordinates();
         searchForWineries();
