@@ -149,7 +149,7 @@ async function initMap() {
             };
             defaultLocation = userLocation; // Set the defaultLocation to the user's location
 
-            console.log("location: " + defaultLocation);
+            console.log(defaultLocation);
             map.setCenter(defaultLocation); // Set the map center to the location
             searchForWineries(); // Perform initial search
 
@@ -158,7 +158,7 @@ async function initMap() {
             // Handle errors if geolocation fails
             defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
 
-            console.log("location: " + defaultLocation);
+            console.log(defaultLocation);
             map.setCenter(defaultLocation); // Set the map center to the location
             searchForWineries(); // Perform initial search
         });
@@ -167,7 +167,7 @@ async function initMap() {
         // Geolocation is not available, use the default location
         defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
 
-        console.log("location: " + defaultLocation);
+        console.log(defaultLocation);
         map.setCenter(defaultLocation); // Set the map center to the location
         searchForWineries(); // Perform initial search
     }
