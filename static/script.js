@@ -215,25 +215,6 @@ function searchForWineries() {
     // Get the current bounds
     var currentBounds = map.getBounds();
 
-    // Define padding (latitude and longitude)
-    var paddingLat = -0.1; // Example padding in degrees latitude
-    var paddingLng = -0.1; // Example padding in degrees longitude
-
-    // Extend the bounds
-    //extendedBounds = extendBounds(currentBounds, paddingLat, paddingLng);
-
-
-    /*
-    searchArea("meadery", currentBounds, function (error, results) {
-        if (error) {
-            console.error("Error:", error);
-        } else {
-            console.log(results);
-            processSearchResults(results)
-        }
-    });
-    */
-
     function searchArea(keyword, bounds, callback) {
         var request = {
             bounds: bounds,
@@ -273,6 +254,7 @@ function searchForWineries() {
                 results.forEach(function (result) {
                     if (!allResults.some(existingResult => existingResult.place_id === result.place_id)) {
                         allResults.push(result);
+                        console.log("unique place found: " + result)
                     }
                 });
             } catch (error) {
@@ -280,7 +262,7 @@ function searchForWineries() {
             }
         }
 
-        //console.log('All results:', allResults);
+        console.log('All results:', allResults);
 
         return allResults;
     }
