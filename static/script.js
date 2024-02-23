@@ -165,21 +165,45 @@ async function initMap() {
         searchForWineries(); // Perform initial search
     }
 
-    // Add an event listener for map dragging (panning)
-    map.addListener('dragend', function () {
-        //logCoordinates();
-        console.log('dragend');
-        searchForWineries();
-    });
+   ///////
+   var mapFullyLoaded = false; // Flag to track if the map has finished loading
+var lastSearchTime = 0;
+var debounceTimer = null;
+const searchDelay = 500; // Delay before considering an interaction as finished
+const minimumIntervalBetweenSearches = 1000; // Minimum time between consecutive searches
 
-    map.addListener('zoom_changed', function () {
-        // Handle zoom change here
-        var zoomLevel = map.getZoom();
-        console.log('zoom_changed - Level:', zoomLevel);
-
-        //logCoordinates();
+function attemptSearchForWineries() {
+    var currentTime = Date.now();
+    // Check if sufficient time has passed since the last search
+    if (currentTime - lastSearchTime > minimumIntervalBetweenSearches) {
         searchForWineries();
-    });
+        lastSearchTime = currentTime;
+    }
+}
+
+function debounceSearchForWineries() {
+    if (!mapFullyLoaded) return; // Ignore events until the map is fully loaded
+    
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        attemptSearchForWineries();
+    }, searchDelay);
+}
+
+// Listen for the map to be fully loaded
+map.addListener('tilesloaded', function() {
+    mapFullyLoaded = true; // Set the flag to true once the map tiles are loaded
+});
+
+// Setup event listeners
+map.addListener('dragend', debounceSearchForWineries);
+map.addListener('zoom_changed', debounceSearchForWineries);
+// Optionally, if you decided to include 'idle', add it in a similar way
+map.addListener('idle', debounceSearchForWineries);
+
+   ///////
+    
+    
 }
 
 initMap();
