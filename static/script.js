@@ -148,20 +148,31 @@ async function initMap() {
                 lng: position.coords.longitude,
             };
             defaultLocation = userLocation; // Set the defaultLocation to the user's location
+
+            console.log("location: " + defaultLocation);
+            map.setCenter(defaultLocation); // Set the map center to the location
+            searchForWineries(); // Perform initial search
+
         }, function () {
             console.log("geolocation failed");
             // Handle errors if geolocation fails
             defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
+
+            console.log("location: " + defaultLocation);
+            map.setCenter(defaultLocation); // Set the map center to the location
+            searchForWineries(); // Perform initial search
         });
     } else {
         console.log("geolocation not available");
         // Geolocation is not available, use the default location
         defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
+
+        console.log("location: " + defaultLocation);
+        map.setCenter(defaultLocation); // Set the map center to the location
+        searchForWineries(); // Perform initial search
     }
 
-    console.log("location: " + defaultLocation);
-    map.setCenter(defaultLocation); // Set the map center to the location
-    searchForWineries(); // Perform initial search
+
 
     ///////
     var mapFullyLoaded = false; // Flag to track if the map has finished loading
