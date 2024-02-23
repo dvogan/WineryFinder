@@ -148,62 +148,59 @@ async function initMap() {
                 lng: position.coords.longitude,
             };
             defaultLocation = userLocation; // Set the defaultLocation to the user's location
-            map.setCenter(defaultLocation); // Set the map center to the user's location
-            searchForWineries(); // Perform initial search
         }, function () {
             console.log("geolocation failed");
             // Handle errors if geolocation fails
-            defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
-            map.setCenter(defaultLocation); // Set the map center to the default location
-            searchForWineries(); // Perform initial search
+            defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
         });
     } else {
         console.log("geolocation not available");
         // Geolocation is not available, use the default location
-        defaultLocation = { lat: 37.7749, lng: -122.4194 }; // Default location (San Francisco)
-        map.setCenter(defaultLocation); // Set the map center to the default location
-        searchForWineries(); // Perform initial search
+        defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
     }
 
-   ///////
-   var mapFullyLoaded = false; // Flag to track if the map has finished loading
-var lastSearchTime = 0;
-var debounceTimer = null;
-const searchDelay = 500; // Delay before considering an interaction as finished
-const minimumIntervalBetweenSearches = 1000; // Minimum time between consecutive searches
+    map.setCenter(defaultLocation); // Set the map center to the location
+    searchForWineries(); // Perform initial search
 
-function attemptSearchForWineries() {
-    var currentTime = Date.now();
-    // Check if sufficient time has passed since the last search
-    if (currentTime - lastSearchTime > minimumIntervalBetweenSearches) {
-        searchForWineries();
-        lastSearchTime = currentTime;
+    ///////
+    var mapFullyLoaded = false; // Flag to track if the map has finished loading
+    var lastSearchTime = 0;
+    var debounceTimer = null;
+    const searchDelay = 500; // Delay before considering an interaction as finished
+    const minimumIntervalBetweenSearches = 1000; // Minimum time between consecutive searches
+
+    function attemptSearchForWineries() {
+        var currentTime = Date.now();
+        // Check if sufficient time has passed since the last search
+        if (currentTime - lastSearchTime > minimumIntervalBetweenSearches) {
+            searchForWineries();
+            lastSearchTime = currentTime;
+        }
     }
-}
 
-function debounceSearchForWineries() {
-    if (!mapFullyLoaded) return; // Ignore events until the map is fully loaded
-    
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        attemptSearchForWineries();
-    }, searchDelay);
-}
+    function debounceSearchForWineries() {
+        if (!mapFullyLoaded) return; // Ignore events until the map is fully loaded
 
-// Listen for the map to be fully loaded
-map.addListener('tilesloaded', function() {
-    mapFullyLoaded = true; // Set the flag to true once the map tiles are loaded
-});
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            attemptSearchForWineries();
+        }, searchDelay);
+    }
 
-// Setup event listeners
-map.addListener('dragend', debounceSearchForWineries);
-map.addListener('zoom_changed', debounceSearchForWineries);
-// Optionally, if you decided to include 'idle', add it in a similar way
-map.addListener('idle', debounceSearchForWineries);
+    // Listen for the map to be fully loaded
+    map.addListener('tilesloaded', function () {
+        mapFullyLoaded = true; // Set the flag to true once the map tiles are loaded
+    });
 
-   ///////
-    
-    
+    // Setup event listeners
+    map.addListener('dragend', debounceSearchForWineries);
+    map.addListener('zoom_changed', debounceSearchForWineries);
+    // Optionally, if you decided to include 'idle', add it in a similar way
+    map.addListener('idle', debounceSearchForWineries);
+
+    ///////
+
+
 }
 
 initMap();
@@ -214,7 +211,7 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
     "ordering": true, // Enable sorting
     "info": true, // Show table information
     "pageLength": 5,
-    "lengthChange": false, 
+    "lengthChange": false,
     columnDefs: [
         { targets: [0], width: '40%' },
         { targets: [1], width: '15%' },
