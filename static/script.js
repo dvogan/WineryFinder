@@ -159,6 +159,7 @@ async function initMap() {
         defaultLocation = { lat: 41.642, lng: -80.147 }; // Default location (Meadville PA)
     }
 
+    console.log("location: " + defaultLocation);
     map.setCenter(defaultLocation); // Set the map center to the location
     searchForWineries(); // Perform initial search
 
