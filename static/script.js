@@ -260,6 +260,7 @@ function searchForWineries() {
                 callback(null, results);
             } else {
                 console.log("Search for " + keyword + " failed: " + status);
+                callback(null,null);
             }
         });
     }
