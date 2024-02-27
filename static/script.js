@@ -62,6 +62,31 @@ window.addEventListener('load', async function () {
 
         myWineriesLink.style.display = 'none';
     }
+
+    const ratingContainers = document.querySelectorAll('.winery-rating');
+
+    ratingContainers.forEach(container => {
+        const stars = container.querySelectorAll('.star');
+        const placeId = container.getAttribute('data-place-id'); // Get the unique place_id of the winery
+
+        stars.forEach(star => {
+            star.addEventListener('click', function (e) {
+                setRating(stars, placeId, e); // Pass the placeId to the setRating function
+            });
+        });
+    });
+
+    function setRating(stars, placeId, e) {
+        const starValue = parseInt(e.currentTarget.getAttribute('data-value'), 10);
+        stars.forEach(star => {
+            star.classList.remove('rated');
+            if (parseInt(star.getAttribute('data-value'), 10) <= starValue) {
+                star.classList.add('rated');
+            }
+        });
+
+        console.log(`Winery ${placeId} rated as ${starValue} stars.`); // Example action, replace with actual code to send rating to server or process it further
+    }
 });
 
 function getUserWineries() {
@@ -117,11 +142,13 @@ async function updatePin(place_details) {
 }
 
 let map;
-// initMap is now async
+
 async function initMap() {
     // Request libraries when needed, not in the script tag.
     const { Map } = await google.maps.importLibrary("maps");
     const { Places } = await google.maps.importLibrary("places");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
     // Short namespaces can be used.
     map = new Map(document.getElementById("map"), {
         center: defaultLocation, // Default location (initially undefined)
@@ -229,8 +256,30 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
         { targets: [1], width: '15%' },
         { targets: [2], width: '15%' },
         { targets: [3], width: '15%' },
-        { targets: [4], width: '15%' },
-    ]
+        {
+            "targets": [4], // Target the second column (Rating)
+            "data": "rating", // Use the 'rating' key from your data source
+            "render": function(data, type, row, meta) {
+                console.log(data);
+                return "<div class='rateYo' data-rating='" + data + "'></div>";
+            }
+        }
+    ],
+    "createdRow": function(row, data, dataIndex) {
+        // Initialize rateYo for each row in the 'Rating' column
+
+        $('td', row).eq(4).find('.rateYo').rateYo({
+            rating: data.rating, // Assuming your data source has a 'rating' key
+            fullStar: true,
+            starWidth: "16px",
+            ratedFill: "#494277",
+            onSet: function(rating, rateYoInstance) {
+                // Handle the rating change event here
+                // For example, send the rating to your server using AJAX
+                console.log(`The rating for ${data} is now ${rating}`);
+            }
+        });
+    }
 });
 
 dataTable.clear().draw();
@@ -260,7 +309,7 @@ function searchForWineries() {
                 callback(null, results);
             } else {
                 console.log("Search for " + keyword + " failed: " + status);
-                callback(null,null);
+                callback("error", null);
             }
         });
     }
@@ -380,14 +429,6 @@ function displayPlace(place_details) {
         labelOrigin: labelOriginFilled
     };
 
-    marker = new google.maps.Marker({
-        map: map,
-        position: place_details.place.geometry.location,
-        icon: markerImage,
-        title: place_details.place.name,
-        place_id: place_details.place.place_id
-    });
-
     lat = place_details.place.geometry.location.lat()
     lng = place_details.place.geometry.location.lng()
 
@@ -408,11 +449,16 @@ function displayPlace(place_details) {
     contentString += '<p>' + dirLink + '</p>'
     contentString += '<p class="hours">' + hours + '</p>'
 
+    marker = new google.maps.Marker({
+        map: map,
+        position: place_details.place.geometry.location,
+        icon: markerImage,
+        title: place_details.place.name,
+        place_id: place_details.place.place_id
+    });
 
     var infoWindow = new google.maps.InfoWindow();
     infoWindow.setContent(contentString);
-
-
 
     marker.addListener('click', function () {
         // Close the current InfoWindow if it's open
@@ -426,8 +472,23 @@ function displayPlace(place_details) {
         currentInfowindow = infoWindow;
     });
 
+    /*
+    const latLng = new google.maps.LatLng(lat, lng);
+
+    const marker = new AdvancedMarkerElement({
+        position: latLng,
+        map: map,
+        content: contentString,
+        icon: markerImage,
+        title: place_details.place.name,
+        place_id: place_details.place.place_id
+    });
+    */
+
     wineryMarkers.push(marker);
 }
+
+
 
 function createTableRow(link, place_details) {
     var encodedID = place_details.place.place_id.replace(/ /g, '_');
@@ -469,7 +530,7 @@ function createTableRow(link, place_details) {
     favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
     wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
-    dataTable.row.add([link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML, "rate..."]).draw();
+    dataTable.row.add([link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML]).draw();
 
     //console.log(clerk.user);
     if (clerk.user) {

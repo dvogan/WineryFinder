@@ -187,3 +187,19 @@ html, body {
   .dropdown:hover .dropdown-content {
     display: block;
   }
+
+  .star-rating {
+    direction: rtl;
+    font-size: 30px;
+    unicode-bidi: bidi-override;
+    display: inline-block;
+  }
+  
+  .star-rating .star {
+    cursor: pointer;
+    color: #ccc; /* Default star color */
+  }
+  
+  .star-rating .star.rated {
+    color: #494277 /* Highlighted star color */
+  }
