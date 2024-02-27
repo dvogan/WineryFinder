@@ -1,9 +1,7 @@
 var wineryService;
 var wineryMarkers = [];
-var defaultLocation; // Will be set to the user's location
+var defaultLocation; 
 let userwineries;
-var rawResults = []
-var placesDetails = [];
 var currentInfowindow = null;
 var extendedBounds;
 var clerk;
@@ -15,18 +13,6 @@ function CustomInfoWindow() {
     google.maps.InfoWindow.call(this);
     // Additional customization
 }
-//CustomInfoWindow.prototype = new google.maps.InfoWindow();
-//CustomInfoWindow.prototype.constructor = CustomInfoWindow;
-
-// Function to print the screen size
-function printScreenSize() {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    console.log("Width: " + width + "px, Height: " + height + "px");
-}
-
-// Event listener for window resize/orientation change
-//window.addEventListener('resize', printScreenSize);
 
 // Adds listener to initialize ClerkJS after it's loaded
 window.addEventListener('load', async function () {
@@ -260,7 +246,6 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
             "targets": [4], // Target the second column (Rating)
             "data": "rating", // Use the 'rating' key from your data source
             "render": function(data, type, row, meta) {
-                console.log(data);
                 return "<div class='rateYo' data-rating='" + data + "'></div>";
             }
         }
@@ -305,7 +290,6 @@ function searchForWineries() {
 
         wineryService.nearbySearch(request, function (results, status) {
             if (status === google.maps.places.PlacesServiceStatus.OK) {
-                console.log(results)
                 callback(null, results);
             } else {
                 console.log("Search for " + keyword + " failed: " + status);
@@ -323,6 +307,8 @@ function searchForWineries() {
 
         for (const currentKeyword of keywords) {
             try {
+                //console.log("Search for: " + currentKeyword);
+
                 const results = await new Promise((resolve, reject) => {
                     searchArea(currentKeyword, bounds, function (error, results) {
                         if (error) {
@@ -333,11 +319,13 @@ function searchForWineries() {
                     });
                 });
 
-                // Filter out duplicates
+                //console.log(results);
+
+                // Filter out duplicates && non-food places
                 results.forEach(function (result) {
-                    if (!allResults.some(existingResult => existingResult.place_id === result.place_id)) {
+                    if (!allResults.some(existingResult => existingResult.place_id === result.place_id) && (result.types.includes('food'))) {
                         allResults.push(result);
-                        console.log("unique place found: " + result)
+                        //console.log("unique place found: " + result)
                     }
                 });
             } catch (error) {
@@ -345,59 +333,95 @@ function searchForWineries() {
             }
         }
 
-        console.log('All results:', allResults);
-
         return allResults;
     }
 
     searchAndFilter().then((allResults) => {
         // Access allResults here
-        console.log('All results:', allResults);
-        processSearchResults(allResults)
+        //console.log('All results:', allResults);
+        allResults.forEach(function (place) {
+            fetchPlaceDetails(place.place_id, function (details) {
+                var link = '';
+
+                if (details.website) {
+                    link = "<a href='" + details.website + "' target='_blank'>" + place.name + "<a/>"
+                }
+                else {
+                    link = place.name
+                }
+                
+                var place_details = { "place_id": place.place_id, "details": details, "place": place, "link": link }
+
+                createTableRow(place_details)
+                createPin(place_details)
+            });
+        });
     });
-
-
 }
 
-var allPlaces = {}; // Object to store unique places
+function createTableRow(place_details) {
+    var encodedID = place_details.place.place_id.replace(/ /g, '_');
 
-function processSearchResults(results) {
-    results.forEach(function (place) {
-        //console.log(place.types)
-        //console.log(allPlaces);
-        if (place.types.includes('food')) {
-            processPlace(place);
+    var visited_checkboxId = 'visited_checkbox_' + encodedID;
+    var favorited_checkboxId = 'favorited_checkbox_' + encodedID;
+    var wishlist_checkboxId = 'wishlist_checkbox_' + encodedID;
+
+    visited = ""
+    favorited = ""
+    wishlist = ""
+
+    if (clerk.user) {
+        if (userwineries) {
+            const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
+
+            console.log(userplace)
+
+            if (userplace) {
+                if (userplace.visited) {
+                    visited = "checked"
+                }
+
+                if (userplace.favorite) {
+                    favorited = "checked"
+                }
+
+                if (userplace.wishlist) {
+                    wishlist = "checked"
+                }
+            }
+            else {
+                console.log("no user data for this place")
+            }
         }
-    });
-}
+    }
 
+    visited_checkboxHTML = `<input type="checkbox" name="visited_placeCheckbox" id="${visited_checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
+    favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
+    wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
+   
 
-function processPlace(place) {
-    fetchPlaceDetails(place.place_id, function (details) {
-        place_details = { "place_id": place.place_id, "details": details, "place": place }
+    dataTable.row.add([place_details.link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML]).draw();
 
-        placesDetails.push(place_details)
+    //console.log(clerk.user);
+    if (clerk.user) {
+        $(`#${visited_checkboxId}`).on('change', function () {
+            var isChecked = $(this).is(':checked');
 
-        displayPlace(place_details)
-    });
-}
-
-function displayPlace(place_details) {
-    //console.log("displayPlace");
-    var link = '';
-
-    //console.log(place_details)
-
-    if (place_details.details.website) {
-        link = "<a href='" + place_details.details.website + "' target='_blank'>" + place_details.place.name + "<a/>"
+            saveWinery(place_details, isChecked);
+        });
     }
     else {
-        link = place_details.place.name
+        $(`#${visited_checkboxId}`).on('click', function () {
+            event.preventDefault();
+
+            // Call the alert function
+            alert('Please create an account to use this feature.');
+        });
     }
+}
 
-    createTableRow(link, place_details)
-
+function createPin(place_details) {
     var pinColor;
 
     if (userwineries) {
@@ -445,7 +469,7 @@ function displayPlace(place_details) {
 
     }
 
-    var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + link + '</h4></div>';
+    var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + place_details.link + '</h4></div>';
     contentString += '<p>' + dirLink + '</p>'
     contentString += '<p class="hours">' + hours + '</p>'
 
@@ -486,68 +510,6 @@ function displayPlace(place_details) {
     */
 
     wineryMarkers.push(marker);
-}
-
-
-
-function createTableRow(link, place_details) {
-    var encodedID = place_details.place.place_id.replace(/ /g, '_');
-
-    var visited_checkboxId = 'visited_checkbox_' + encodedID;
-    var favorited_checkboxId = 'favorited_checkbox_' + encodedID;
-    var wishlist_checkboxId = 'wishlist_checkbox_' + encodedID;
-
-    visited = ""
-    favorited = ""
-    wishlist = ""
-
-    if (clerk.user) {
-        if (userwineries) {
-            const userplace = userwineries.find(obj => obj.placeid === place_details.place.place_id);
-
-            console.log(userplace)
-
-            if (userplace) {
-                if (userplace.visited) {
-                    visited = "checked"
-                }
-
-                if (userplace.favorite) {
-                    favorited = "checked"
-                }
-
-                if (userplace.wishlist) {
-                    wishlist = "checked"
-                }
-            }
-            else {
-                console.log("no user data for this place")
-            }
-        }
-    }
-
-    visited_checkboxHTML = `<input type="checkbox" name="visited_placeCheckbox" id="${visited_checkboxId}" value="${place_details.place.place_id}" ${visited}>`;
-    favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
-    wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
-
-    dataTable.row.add([link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML]).draw();
-
-    //console.log(clerk.user);
-    if (clerk.user) {
-        $(`#${visited_checkboxId}`).on('change', function () {
-            var isChecked = $(this).is(':checked');
-
-            saveWinery(place_details, isChecked);
-        });
-    }
-    else {
-        $(`#${visited_checkboxId}`).on('click', function () {
-            event.preventDefault();
-
-            // Call the alert function
-            alert('Please create an account to use this feature.');
-        });
-    }
 }
 
 function saveWinery(place_details, state) {
