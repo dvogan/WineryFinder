@@ -18,7 +18,7 @@ function CustomInfoWindow() {
 window.addEventListener('load', async function () {
     clerk = window.Clerk;
 
-    console.log("clerk.user: " + clerk.user)
+    console.log("clerk.user: ", clerk)
 
     var auth_link = document.getElementById('auth_link');
     var myWineriesLink = this.document.getElementById('myWineriesLink')
@@ -238,30 +238,38 @@ dataTable = $('#wineryTable').DataTable({ // Initialize DataTables
     "pageLength": 5,
     "lengthChange": false,
     columnDefs: [
-        { targets: [0], width: '40%' },
+        { targets: [0], width: '35%' },
         { targets: [1], width: '15%' },
         { targets: [2], width: '15%' },
         { targets: [3], width: '15%' },
-        {
-            "targets": [4], // Target the second column (Rating)
-            "data": "rating", // Use the 'rating' key from your data source
-            "render": function(data, type, row, meta) {
-                return "<div class='rateYo' data-rating='" + data + "'></div>";
-            }
-        }
+        { targets: [4], width: '20%' }
     ],
     "createdRow": function(row, data, dataIndex) {
         // Initialize rateYo for each row in the 'Rating' column
 
+        var readOnly=true;
+        if(clerk.user) {
+            readOnly=false
+        }
+
         $('td', row).eq(4).find('.rateYo').rateYo({
-            rating: data.rating, // Assuming your data source has a 'rating' key
+            rating: 1, // Assuming your data source has a 'rating' key
             fullStar: true,
             starWidth: "16px",
             ratedFill: "#494277",
+            //readOnly: readOnly,
             onSet: function(rating, rateYoInstance) {
-                // Handle the rating change event here
-                // For example, send the rating to your server using AJAX
-                console.log(`The rating for ${data} is now ${rating}`);
+                var place_details=data[5]
+                console.log(place_details,rating);
+
+                if (clerk.user) {
+                    
+                }
+                else {
+                    var msg='Please create an account to use this feature.'
+        
+                    alert(msg);
+                }
             }
         });
     }
@@ -399,24 +407,54 @@ function createTableRow(place_details) {
     favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
     wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
-   
+    rating_HTML="<div class='rateYo'></div>"
 
-    dataTable.row.add([place_details.link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML]).draw();
+    idHolder=`<input type="hidden" class="row-id" value="${place_details.place.place_id}" />`
+
+    dataTable.row.add([place_details.link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML, rating_HTML, place_details]).draw();
 
     //console.log(clerk.user);
     if (clerk.user) {
-        $(`#${visited_checkboxId}`).on('change', function () {
-            var isChecked = $(this).is(':checked');
+        var isVisitedChecked , isFavoritedChecked, isWishlistChecked;
 
-            saveWinery(place_details, isChecked);
+
+        $(`#${visited_checkboxId}`).on('change', function () {
+            isVisitedChecked = $(`#${visited_checkboxId}`).is(':checked');
+            isFavoritedChecked = $(`#${favorited_checkboxId}`).is(':checked');
+            isWishlistChecked = $(`#${wishlist_checkboxId}`).is(':checked');
+
+            saveWinery(place_details, isVisitedChecked, isFavoritedChecked, isWishlistChecked);
+        });
+
+        $(`#${favorited_checkboxId}`).on('change', function () {
+            isVisitedChecked = $(`#${visited_checkboxId}`).is(':checked');
+            isFavoritedChecked = $(`#${favorited_checkboxId}`).is(':checked');
+            isWishlistChecked = $(`#${wishlist_checkboxId}`).is(':checked');
+
+            saveWinery(place_details, isVisitedChecked, isFavoritedChecked, isWishlistChecked);
+        });
+
+        $(`#${wishlist_checkboxId}`).on('change', function () {
+            isVisitedChecked = $(`#${visited_checkboxId}`).is(':checked');
+            isFavoritedChecked = $(`#${favorited_checkboxId}`).is(':checked');
+            isWishlistChecked = $(`#${wishlist_checkboxId}`).is(':checked');
+
+            saveWinery(place_details, isVisitedChecked, isFavoritedChecked, isWishlistChecked);
         });
     }
     else {
-        $(`#${visited_checkboxId}`).on('click', function () {
-            event.preventDefault();
+        var msg='Please create an account to use this feature.'
 
-            // Call the alert function
-            alert('Please create an account to use this feature.');
+        $(`#${visited_checkboxId}`).on('click', function () {
+            alert(msg);
+        });
+
+        $(`#${favorited_checkboxId}`).on('click', function () {
+            alert(msg);
+        });
+
+        $(`#${wishlist_checkboxId}`).on('click', function () {
+            alert(msg);
         });
     }
 }
@@ -512,15 +550,17 @@ function createPin(place_details) {
     wineryMarkers.push(marker);
 }
 
-function saveWinery(place_details, state) {
-    console.log("saveWinery: " + place_details.place.place_id);
+function saveWinery(place_details, isVisitedChecked, isFavoritedChecked, isWishlistChecked) {
+    console.log("saveWinery: " + place_details.place.place_id, isVisitedChecked, isFavoritedChecked, isWishlistChecked);
 
     $.ajax({
         type: 'POST',
         url: '/saveWinery',
         data: {
             place_id: place_details.place.place_id,
-            checkbox_state: state,
+            visited: isVisitedChecked,
+            favorited: isFavoritedChecked,
+            wishlist: isWishlistChecked,
             user: clerk.user.id
         },
         success: function (response) {

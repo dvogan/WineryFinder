@@ -100,30 +100,44 @@ def get_place_details():
 @app.route('/saveWinery', methods=['POST'])
 def handle_checkbox_state():
     place_id = request.form.get('place_id')
-    checkbox_state = request.form.get('checkbox_state')
+
+    if request.form.get('visited') == 'true':
+        visited=True
+    else:
+        visited=False
+
+    if request.form.get('favorited') == 'true':
+        favorited=True
+    else:
+        favorited=False
+
+    if request.form.get('wishlist') == 'true':
+        wishlist=True
+    else:
+        wishlist=False
+
     user = request.form.get('user')
 
-    # Handle the checkbox state here, e.g., perform actions based on checked or unchecked state
-    # You can return a response as needed
-
-    # Example response
-    response_data = {'message': f'Checkbox for {place_id} is {checkbox_state}'}
-
-    print(response_data);
-
-    if(checkbox_state=="true"):
-        #print("insert")
-        sql=f"insert into userwineries (placeid,userid) values ('{place_id}','{user}')"
-    else:
-        #print("delete")
-        sql=f"delete from userwineries where placeid='{place_id}' and userid='{user}'"
+    print(place_id)
+    print(user)
+    print(visited)
+    print(favorited)
+    print(wishlist)
         
-    print(sql)
     cursor = conn.cursor()
-    cursor.execute(sql)
+    
+     # Prepare the CALL statement
+    call_statement = """
+    CALL SetWineryUserProps(%s, %s, %s, %s, %s)
+    """
+
+    # Execute the CALL statement
+    cursor.execute(call_statement, (place_id, user, visited, favorited, wishlist))
+
+    # Commit the transaction
     conn.commit()
 
-    return response_data
+    return {"status" : "ok"}
 
 @app.route('/getUserWineries', methods=['GET'])
 def get_user_wineries():
