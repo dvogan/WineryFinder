@@ -426,7 +426,7 @@ async function initMap() {
              background: '#494277',
              glyph: "",
          });
- */
+        */
 
         /*
         var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + place_details.link + '</h4></div>';
