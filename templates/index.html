@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Wineries Map</title>
 
@@ -14,8 +15,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
 
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+
+    <script src="https://use.fontawesome.com/releases/v6.2.0/js/all.js"></script>
+    
+
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
 </head>
+
 <body>
     <div id="page-container">
         <div id="content-wrap">
@@ -23,14 +30,16 @@
                 <img src="{{ url_for('static', filename='winefinder_icon_3.png') }}" alt="Icon" id="icon">
                 <h1 id="banner_title">Winery Finder</h1>
                 <div id="authdiv">
-                    <a href="#" id="myWineriesLink">My Wineries</a>
-                    <a href="#" id="auth_link">Sign In</a>
+                    <!-- SignIn Button -->
+                    <div id="auth_link">Sign In</div>
+
+                    <!-- User Button (hidden by default, shown when signed in) -->
+                    <div id="user_button"></div>
                 </div>
             </div>
             <div id="content">
                 <div id="map"></div>
                 <div id="results">
-                    <h2>Wineries search results</h2>
                     <table id="wineryTable">
                         <thead>
                             <tr>
@@ -52,39 +61,65 @@
 
     <script src="{{ url_for('static', filename='config.js') }}"></script>
 
+    <script>(g => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })
+            ({ key: googleMapsApiKey, v: "beta" });</script>
 
-    <script>
-        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
-          key: googleMapsApiKey,
-          v: "weekly",
-          // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
-          // Add other bootstrap parameters as needed, using camel case.
-        });
-      </script>
-
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
     <script>
         // Get this URL and Publishable Key from the Clerk Dashboard
         const clerkPublishableKey = 'pk_test_c2V0dGxlZC1zaGFyay04OC5jbGVyay5hY2NvdW50cy5kZXYk';
         const frontendApi = 'settled-shark-88.clerk.accounts.dev';
         const version = '@latest'; // Set to appropriate version
-       
+
         // Creates asynchronous script
         const script = document.createElement('script');
         script.setAttribute('data-clerk-frontend-api', frontendApi);
         script.setAttribute('data-clerk-publishable-key', clerkPublishableKey);
         script.async = true;
         script.src = `https://${frontendApi}/npm/@clerk/clerk-js${version}/dist/clerk.browser.js`;
-       
+
         // Adds listener to initialize ClerkJS after it's loaded
         script.addEventListener('load', async function () {
-          await window.Clerk.load({
-            // Set load options here...
-          });
+            await window.Clerk.load();
+
+            clerk = window.Clerk;
+
+            console.log("clerk: ", clerk);
+            console.log("clerk.user: ", clerk.user);
+
+            var auth_link = document.getElementById('auth_link');
+            //var myWineriesLink = this.document.getElementById('myWineriesLink')
+
+            if (clerk.user) {
+                window.Clerk.mountUserButton(auth_link, {
+                    appearance: {
+                        baseTheme: 'dark'
+                    },
+                    afterSignOutUrl: "/"
+                });
+                auth_link.textContent = "";
+            }
+            else {
+                auth_link.addEventListener('click', function (event) {
+                    // Prevent default action of the link
+                    event.preventDefault();
+
+                    window.Clerk.openSignIn(auth_link, {
+                        appearance: {
+                            baseTheme: 'dark'
+                        }
+                        ,
+                        afterSignInUrl: "/"
+                    });
+                });
+
+                //myWineriesLink.style.display = 'none';
+            }
         });
         document.body.appendChild(script);
     </script>
-    
+
 </body>
+
 </html>

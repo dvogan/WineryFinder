@@ -203,3 +203,139 @@ html, body {
   .star-rating .star.rated {
     color: #494277 /* Highlighted star color */
   }
+
+  :root {
+    --winery-color: #263238;
+  }
+
+  .winery {
+    align-items: center;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    color: #263238;
+    display: flex;
+    font-size: 14px;
+    gap: 15px;
+    height: 30px;
+    justify-content: center;
+    padding: 4px;
+    position: relative;
+    position: relative;
+    transition: all 0.3s ease-out;
+    width: 30px;
+  }
+  
+  .winery::after {
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-top: 9px solid #FFFFFF;
+    content: "";
+    height: 0;
+    left: 50%;
+    position: absolute;
+    top: 95%;
+    transform: translate(-50%, 0);
+    transition: all 0.3s ease-out;
+    width: 0;
+    z-index: 1;
+  }
+  
+  .winery .icon {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    color: #FFFFFF;
+  }
+  
+  .winery .icon svg {
+    height: 20px;
+    width: auto;
+  }
+  
+  .winery .details {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+  }
+  
+  .winery .address {
+    color: #9E9E9E;
+    font-size: 10px;
+    margin-bottom: 10px;
+    margin-top: 5px;
+  }
+  
+  .winery .features {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+  }
+  
+  .winery .features > div {
+    align-items: center;
+    background: #F5F5F5;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    display: flex;
+    font-size: 10px;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .winery.highlight {
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 10px 10px 5px rgba(0, 0, 0, 0.2);
+    height: 80px;
+    padding: 8px 15px;
+    width: auto;
+  }
+  
+  .winery.highlight::after {
+    border-top: 9px solid #FFFFFF;
+  }
+  
+  .winery.highlight .details {
+    display: flex;
+  }
+  
+  .winery.highlight .icon svg {
+    width: 50px;
+    height: 50px;
+  }
+
+  .winery.highlight .icon {
+    color: var(--winery-color);
+  }
+  
+  .winery:not(.highlight) {
+    background-color: var(--winery-color);
+  }
+  
+  .winery:not(.highlight)::after {
+    border-top: 9px solid var(--winery-color);
+  }
+
+ /* * HTML marker styles */
+.winery-tag {
+  background-color: #263238;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 14px;
+  padding: 3px 5px;
+  position: relative;
+}
+
+.winery-tag::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, 0);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #263238;
+}
