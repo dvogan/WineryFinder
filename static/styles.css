@@ -77,10 +77,16 @@ body {
     font-size: large;
 }
 
+#pinTypeHolder {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
 #auth_link {
     margin-left: auto;
     color: white;
     padding-right: 25px;
+    cursor: pointer;
 }
 
 #myWineriesLink {
@@ -239,17 +245,38 @@ html, body {
     width: 0;
     z-index: 1;
   }
+
+  .winery .markercontainer {
+    position: relative; /* Establishes a positioning context */
+    display: inline-block; /* Or flex, depending on layout needs */
+}
   
-  .winery .icon {
-    align-items: center;
-    display: flex;
-    justify-content: center;
+  .winery .markercontainer .icon {
     color: #FFFFFF;
+
+    z-index: 1; /* Ensure .icon is under .winerynum */
+    display: flex; /* Use flexbox to center the SVG icon */
+    align-items: center;
+    justify-content: center;
   }
   
   .winery .icon svg {
     height: 20px;
     width: auto;
+  }
+
+  .winery .markercontainer .winerynum {
+    color: #FFFFFF;
+    background-color: #263238; /* Optional: adds contrast */
+    border-radius: 50%; /* Optional: makes the number circular */
+    padding: 5px; /* Adjust padding to fit the number inside the circle */
+    
+    z-index: 2; /* Ensure .winerynum is above .icon */
+    position: absolute;
+    top: 0;
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%) translateY(-50%); /* Center both horizontally and vertically */
+    font-weight: bold; /* Optional: makes the number more prominent */
   }
   
   .winery .details {

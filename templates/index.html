@@ -18,7 +18,7 @@
     <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
 
     <script src="https://use.fontawesome.com/releases/v6.2.0/js/all.js"></script>
-    
+
 
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
 </head>
@@ -40,9 +40,21 @@
             <div id="content">
                 <div id="map"></div>
                 <div id="results">
+                    <div id="pinTypeHolder">
+                        Select a map pin type:&nbsp;
+                            <label>
+                                <input type="radio" name="pinOptions" value="Icons" checked>
+                                Icons
+                            </label>&nbsp;
+                            <label>
+                                <input type="radio" name="pinOptions" value="Text">
+                                Text
+                            </label>
+                    </div>
                     <table id="wineryTable">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th>Name</th>
                                 <th>Visited</th>
                                 <th>Favorite</th>
