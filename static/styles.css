@@ -95,7 +95,7 @@ body {
 }
 
 .infoWindowTitle {
-    font-size: x-large;
+    font-size: large;
 }
 
 
@@ -211,14 +211,14 @@ html, body {
   }
 
   :root {
-    --winery-color: #263238;
+    --winery-color: #494277;
   }
 
   .winery {
     align-items: center;
     background-color: #FFFFFF;
     border-radius: 50%;
-    color: #263238;
+    color: #494277;
     display: flex;
     font-size: 14px;
     gap: 15px;
@@ -267,7 +267,7 @@ html, body {
 
   .winery .markercontainer .winerynum {
     color: #FFFFFF;
-    background-color: #263238; /* Optional: adds contrast */
+    background-color: #494277; /* Optional: adds contrast */
     border-radius: 50%; /* Optional: makes the number circular */
     padding: 5px; /* Adjust padding to fit the number inside the circle */
     
@@ -346,7 +346,7 @@ html, body {
 
  /* * HTML marker styles */
 .winery-tag {
-  background-color: #263238;
+  background-color: #494277;
   border-radius: 8px;
   color: #FFFFFF;
   font-size: 14px;
@@ -364,5 +364,33 @@ html, body {
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
-  border-top: 8px solid #263238;
+  border-top: 8px solid #494277;
+}
+
+.toggleHours {
+    font-size: medium;
+
+    color: #0000EE; /* Typical hyperlink blue */
+    text-decoration: underline; /* Underline like a hyperlink */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.toggleHours:hover {
+    color: #551A8B; /* Darker blue when hovered */
+}
+
+.toggleHours:active {
+    color: #FF0000; /* Change color when clicked */
+}
+
+.infowindowHeaderContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* This centers them vertically if your container has a taller height */
+    width: 300px; /* Your specified width */
+    height: 40px;
+}
+
+.googlerating {
+    font-size: medium;
 }

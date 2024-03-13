@@ -100,60 +100,6 @@ async function initMap() {
         },
     });
 
-    class CustomOverlay extends google.maps.OverlayView {
-        constructor(position, content) {
-          super();
-          this.position = position;
-          this.content = content;
-          // Create a div to hold the content
-          this.div = null;
-        }
-
-        /** Called when the overlay is added to the map. */
-        onAdd() {
-          this.div = document.createElement('div');
-          this.div.className = 'custom-overlay';
-          this.div.innerHTML = this.content;
-
-          // Add the element to the overlay layer
-          const panes = this.getPanes();
-          panes.overlayLayer.appendChild(this.div);
-        }
-
-        /** Called when the overlay's location or content needs to be updated. */
-        draw() {
-          // Convert the LatLng position to pixel coordinates
-          const projection = this.getProjection();
-          const pixelPosition = projection.fromLatLngToDivPixel(this.position);
-
-          // Position the div using the pixel coordinates
-          this.div.style.left = pixelPosition.x + 'px';
-          this.div.style.top = pixelPosition.y + 'px';
-        }
-
-        /** Called when the overlay is removed from the map. */
-        onRemove() {
-          if (this.div) {
-            this.div.parentNode.removeChild(this.div);
-            this.div = null;
-          }
-        }
-
-        /** Show the overlay. */
-        show() {
-          if (this.div) {
-            this.div.style.visibility = 'visible';
-          }
-        }
-
-        /** Hide the overlay. */
-        hide() {
-          if (this.div) {
-            this.div.style.visibility = 'hidden';
-          }
-        }
-      }
-
     wineryService = new google.maps.places.PlacesService(map);
 
     infoWindow = new google.maps.InfoWindow();
@@ -242,12 +188,12 @@ async function initMap() {
         "pageLength": 5,
         "lengthChange": false,
         columnDefs: [
-            { targets: [0], width: '5%' },
+            { targets: [0], width: '5%', "orderable": false },
             { targets: [1], width: '30%' },
-            { targets: [2], width: '15%' },
-            { targets: [3], width: '15%' },
-            { targets: [4], width: '15%' },
-            { targets: [5], width: '20%' }
+            { targets: [2], width: '15%', "orderable": false },
+            { targets: [3], width: '15%', "orderable": false },
+            { targets: [4], width: '15%', "orderable": false },
+            { targets: [5], width: '20%', "orderable": false }
         ],
         "createdRow": function (row, data, dataIndex) {
             // Initialize rateYo for each row in the 'Rating' column
@@ -257,18 +203,22 @@ async function initMap() {
                 readOnly = false
             }
 
+
+
             $('td', row).eq(5).find('.rateYo').rateYo({
-                rating: 1, // Assuming your data source has a 'rating' key
+                rating: data[7], // Assuming your data source has a 'rating' key
                 fullStar: true,
                 starWidth: "16px",
                 ratedFill: "#494277",
                 //readOnly: readOnly,
                 onSet: function (rating, rateYoInstance) {
-                    var place_details = data[5]
+                    console.log(data)
+
+                    var place_details = data[6]
                     console.log(place_details, rating);
 
                     if (clerk.user) {
-
+                        rateWinery(place_details, rating)
                     }
                     else {
                         var msg = 'Please create an account or log in to use this feature.'
@@ -276,6 +226,12 @@ async function initMap() {
                         alert(msg);
                     }
                 }
+            });
+
+            // Event listener for removing rating
+            $('.remove-rating').on('click', function () {
+                // Find the closest RateYo instance and set its rating to 0
+                $(this).siblings('.rateYo').rateYo("rating", 0);
             });
         }
     });
@@ -288,15 +244,11 @@ async function initMap() {
     $(window).resize(function () {
         adjustDataTableRows();
     });
-
-
-
 }
 
 initMap();
 
 function searchForWineries() {
-
     dataTable.clear().draw();
 
     // Clear existing winery markers
@@ -425,6 +377,7 @@ function createTableRow(place_details) {
     visited = ""
     favorited = ""
     wishlist = ""
+    rating = 0
 
     if (clerk.user) {
         if (userwineries) {
@@ -444,9 +397,13 @@ function createTableRow(place_details) {
                 if (userplace.wishlist) {
                     wishlist = "checked"
                 }
+
+                if (userplace.rating) {
+                    rating = userplace.rating
+                }
             }
             else {
-                console.log("no user data for this place")
+                //console.log("no user data for this place")
             }
         }
     }
@@ -455,13 +412,13 @@ function createTableRow(place_details) {
     favorited_checkboxHTML = `<input type="checkbox" name="favorited_placeCheckbox" id="${favorited_checkboxId}" value="${place_details.place.place_id}" ${favorited}>`;
     wishlist_checkboxHTML = `<input type="checkbox" name="wishlist_placeCheckbox" id="${wishlist_checkboxId}" value="${place_details.place.place_id}" ${wishlist}>`;
 
-    rating_HTML = "<div class='rateYo'></div>"
+    rating_HTML = "<div class='rateYo'></div><button class='remove-rating'>Remove Rating</button>"
 
     idHolder = `<input type="hidden" class="row-id" value="${place_details.place.place_id}" />`
 
     wineryNumber = place_details.place.wineryNumber
 
-    dataTable.row.add([wineryNumber, place_details.link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML, rating_HTML, place_details]).draw();
+    dataTable.row.add([wineryNumber, place_details.link, visited_checkboxHTML, favorited_checkboxHTML, wishlist_checkboxHTML, rating_HTML, place_details, rating]).draw();
 
     //console.log(clerk.user);
     if (clerk.user) {
@@ -540,23 +497,23 @@ function createPin(place_details) {
         var hours = "";
         try {
             hours = place_details.details.opening_hours.weekday_text.join('<br>')
+            hours=hours.replace("Monday","Mon")
+            hours=hours.replace("Tuesday","Tues")
+            hours=hours.replace("Wednesday","Wed")
+            hours=hours.replace("Thursday","Thur")
+            hours=hours.replace("Friday","Fri")
+            hours=hours.replace("Saturday","Sat")
+            hours=hours.replace("Sunday","Sun")
         }
         catch (ex) {
 
         }
 
-        /*
-         const pinBackground = new PinElement({
-             background: '#494277',
-             glyph: "",
-         });
-        */
+        var contentString = '<div class="infowindowHeaderContainer"><h4 class="infoWindowTitle">' + place_details.link + '</h4><p class="dirLink">' + dirLink + '</p></div>';
+        contentString += '<p class="googlerating">Google rating: ' + place_details.place.rating + ' (' + place_details.place.user_ratings_total + ')</p>';
+        contentString += '<p class="toggleHours">Hours</p>';
+        contentString += '<p class="hours" style="display:none;">' + hours + '</p>';
 
-        
-        var contentString = '<div style="width:300px;"><h4 class="infoWindowTitle">' + place_details.link + '</h4></div>';
-        contentString += '<p>' + dirLink + '</p>'
-        contentString += '<p class="hours">' + hours + '</p>'
-        
 
         const radios = document.querySelectorAll('input[name="pinOptions"]:checked').value;
 
@@ -588,10 +545,34 @@ function createPin(place_details) {
             });
         }
 
-        marker.addListener("click", () => {
+        marker.addListener("gmp-click", () => {
             // Update the InfoWindow content and open it on the marker
             infoWindow.setContent(contentString);
             infoWindow.open(map, marker);
+
+            google.maps.event.addListener(infoWindow, 'domready', function() {
+                // The content is now fully loaded in the DOM
+                var toggleElements = document.querySelectorAll('.toggleHours');
+                console.log(toggleElements);
+                toggleElements.forEach(function(element) {
+                    element.onclick = function() {
+                        var hoursElement = this.nextElementSibling; // Assuming hoursElement is always next
+                        console.log(hoursElement)
+                        if (hoursElement.style.display === 'none') {
+                            hoursElement.style.display = 'block';
+                        } else {
+                            hoursElement.style.display = 'none';
+                        }
+                    };
+                });
+              });
+
+            try {
+                
+            }
+            catch(ex) {
+                console.log(ex)
+            }
         });
 
         wineryMarkers.push(marker)
@@ -651,6 +632,30 @@ function saveWinery(place_details, isVisitedChecked, isFavoritedChecked, isWishl
     });
 }
 
+function rateWinery(place_details, rating) {
+    console.log(place_details);
+    console.log("rateWinery: " + place_details.place.place_id, rating);
+
+    $.ajax({
+        type: 'POST',
+        url: '/rateWinery',
+        data: {
+            place_id: place_details.place.place_id,
+            rating: rating,
+            user: clerk.user.id
+        },
+        success: function (response) {
+            console.log('Flask route response:', response);
+
+            processUserWineries();
+            updatePin(place_details)
+        },
+        error: function (error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
 function fetchPlaceDetails(placeId, callback) {
     fetch(`/get-place-details?place_id=${placeId}`)
         .then(response => response.json())
@@ -694,8 +699,6 @@ async function processUserWineries() {
     if (clerk.user) {
         try {
             let data = await getUserWineries();
-
-            console.log(data)
 
             userwineries = data;
             console.log('User Wineries:', userwineries);

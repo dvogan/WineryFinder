@@ -170,5 +170,32 @@ def get_user_wineries():
 
     return json_array
 
+@app.route('/rateWinery', methods=['POST'])
+def rate_winery():
+    place_id = request.form.get('place_id')
+
+    rating = request.form.get('rating')
+
+    user = request.form.get('user')
+
+    print(place_id)
+    print(user)
+    print(rating)
+        
+    cursor = conn.cursor()
+    
+     # Prepare the CALL statement
+    call_statement = """
+    CALL SetWineryRating(%s, %s, %s)
+    """
+
+    # Execute the CALL statement
+    cursor.execute(call_statement, (place_id, user, rating))
+
+    # Commit the transaction
+    conn.commit()
+
+    return {"status" : "ok"}
+
 if __name__ == '__main__':
     app.run(debug=True)
